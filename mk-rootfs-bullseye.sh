@@ -353,6 +353,14 @@ cd /usr/local/share/WiringPI
 ./build Rockchip
 cd /
 
+#------- ASUS GPIO -------------------
+apt-get install -y python3-pip python3-dev
+pip3 install -y setuptools
+cd /usr/local/share/ASUS_GPIO
+python3 setup.py install
+cd /
+
+
 #------remk-rootfs-bullseye.shmove unused packages------------
 apt remove --purge -fy linux-firmware*
 

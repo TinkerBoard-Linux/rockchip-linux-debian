@@ -1,0 +1,4 @@
+import ASUS.GPIO as GPIO
+GPIO.setmode(GPIO.ASUS)
+GPIO.setup(146, GPIO.OUT)
+GPIO.output(146, GPIO.LOW)
