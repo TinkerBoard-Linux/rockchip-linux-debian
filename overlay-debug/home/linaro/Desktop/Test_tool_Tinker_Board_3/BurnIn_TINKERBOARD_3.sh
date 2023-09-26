@@ -1,7 +1,9 @@
 #!/bin/bash
 
-version=4.11.20221129
+version=4.11.20230926
 
-cd ./BurnIn_test
-sudo ./BurnIn.sh TINKERBOARD_3
+SCRIPT=`realpath $0`
+SCRIPTPATH=`dirname $SCRIPT`/BurnIn_test
+
+sudo $SCRIPTPATH/BurnIn.sh TINKERBOARD_3
 
