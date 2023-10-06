@@ -1,6 +1,7 @@
 #!/bin/bash
 
 FILEPATH=/sys/bus/i2c/devices/2-0050/eeprom
+EEPROM_WC_N=113
 
 function usage {
     echo "command example:"
@@ -14,8 +15,8 @@ function usage {
 }
 
 function gpio {
-    GPIO=$1
-    ACTION=$2
+    GPIO=$EEPROM_WC_N
+    ACTION=$1
 
     case $ACTION in
     acquire)
@@ -85,9 +86,9 @@ function read_write_ppid {
     fi
 
     touch ppid.bin
-    gpio 42 acquire
-    gpio 42 output
-    gpio 42 low
+    gpio acquire
+    gpio output
+    gpio low
 
     dd if=/dev/zero of=$FILEPATH bs=1 count=20 seek=12 > /dev/null 2>&1
 
@@ -101,8 +102,8 @@ function read_write_ppid {
 
     dd if=ppid.bin of=$FILEPATH bs=1 count=$PPIDLEN seek=12 > /dev/null 2>&1
     rm ppid.bin
-    gpio 42 high
-    gpio 42 release
+    gpio high
+    gpio release
 
     data1=`xxd -s 0xc -l 16 -g 1 $FILEPATH \
         | awk '{ print $2$3$4$5$6$7$8$9$10$11$12$13$14$15$16$17 }'`
@@ -145,9 +146,9 @@ function read_write_sn {
     fi
 
     touch sn.bin
-    gpio 42 acquire
-    gpio 42 output
-    gpio 42 low
+    gpio acquire
+    gpio output
+    gpio low
 
     dd if=/dev/zero of=$FILEPATH bs=1 count=20 seek=12 > /dev/null 2>&1
 
@@ -161,8 +162,8 @@ function read_write_sn {
 
     dd if=sn.bin of=$FILEPATH bs=1 count=$SNLEN seek=12 > /dev/null 2>&1
     rm sn.bin
-    gpio 42 high
-    gpio 42 release
+    gpio high
+    gpio release
 
     data1=`xxd -s 0xc -l 16 -g 1 $FILEPATH \
         | awk '{ print $2$3$4$5$6$7$8$9$10$11$12$13$14$15$16$17 }'`
@@ -204,9 +205,9 @@ function read_write_ether {
     fi
 
     touch mac.bin
-    gpio 42 acquire
-    gpio 42 output
-    gpio 42 low
+    gpio acquire
+    gpio output
+    gpio low
 
     idx=0
     while [ $idx -lt 12 ];
@@ -217,8 +218,8 @@ function read_write_ether {
 
     dd if=mac.bin of=$FILEPATH bs=1 count=6 > /dev/null 2>&1
     rm mac.bin
-    gpio 42 high
-    gpio 42 release
+    gpio high
+    gpio release
 
     xxd -s 0x0 -l 6 -g 1 $FILEPATH | awk '{ print $2$3$4$5$6$7 }'
     exit 1
@@ -237,9 +238,9 @@ function write_ether {
     fi
 
     touch mac.bin
-    gpio 42 acquire
-    gpio 42 output
-    gpio 42 low
+    gpio acquire
+    gpio output
+    gpio low
 
     idx=0
     while [ $idx -lt 12 ];
@@ -250,8 +251,8 @@ function write_ether {
 
     dd if=mac.bin of=$FILEPATH bs=1 count=6 > /dev/null 2>&1
     rm mac.bin
-    gpio 42 high
-    gpio 42 release
+    gpio high
+    gpio release
 
     # exit 1
 }
@@ -298,9 +299,9 @@ function write_sn {
     fi
 
     touch sn.bin
-    gpio 42 acquire
-    gpio 42 output
-    gpio 42 low
+    gpio acquire
+    gpio output
+    gpio low
 
     dd if=/dev/zero of=$FILEPATH bs=1 count=20 seek=12 > /dev/null 2>&1
 
@@ -314,8 +315,8 @@ function write_sn {
 
     dd if=sn.bin of=$FILEPATH bs=1 count=$SNLEN seek=12 > /dev/null 2>&1
     rm sn.bin
-    gpio 42 high
-    gpio 42 release
+    gpio high
+    gpio release
 
     exit 1
 }
@@ -363,9 +364,9 @@ function write_serialno {
     fi
 
     touch sn.bin
-    gpio 42 acquire
-    gpio 42 output
-    gpio 42 low
+    gpio acquire
+    gpio output
+    gpio low
 
     dd if=/dev/zero of=$FILEPATH bs=1 count=12 seek=26 > /dev/null 2>&1
 
@@ -379,8 +380,8 @@ function write_serialno {
 
     dd if=sn.bin of=$FILEPATH bs=1 count=$SNUMLEN seek=26 > /dev/null 2>&1
     rm sn.bin
-    gpio 42 high
-    gpio 42 release
+    gpio high
+    gpio release
 
     exit 1
 }
