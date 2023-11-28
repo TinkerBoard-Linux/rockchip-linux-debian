@@ -34,12 +34,6 @@ if [ ! -e  linaro-bullseye-$ARCH.tar.gz ]; then
 	exit -1
 fi
 
-finish() {
-	sudo umount $TARGET_ROOTFS_DIR/dev
-	exit -1
-}
-trap finish ERR
-
 echo -e "\033[36m Extract image \033[0m"
 sudo tar -xpf linaro-bullseye-$ARCH.tar.gz
 
@@ -87,11 +81,6 @@ sudo find ../kernel/drivers/net/wireless/rockchip_wlan/*  -name "*.ko" | \
     xargs -n1 -i sudo cp {} $TARGET_ROOTFS_DIR/system/lib/modules/
 
 echo -e "\033[36m Change root.....................\033[0m"
-if [ "$ARCH" == "armhf" ]; then
-	sudo cp /usr/bin/qemu-arm-static $TARGET_ROOTFS_DIR/usr/bin/
-elif [ "$ARCH" == "arm64"  ]; then
-	sudo cp /usr/bin/qemu-aarch64-static $TARGET_ROOTFS_DIR/usr/bin/
-fi
 
 sudo cp -f /etc/resolv.conf $TARGET_ROOTFS_DIR/etc/
 
@@ -116,14 +105,11 @@ for u in \$(ls /home/); do
 	chown -h -R \$u:\$u /home/\$u
 done
 
-echo "deb http://mirrors.ustc.edu.cn/debian/ bullseye-backports main contrib non-free" >> /etc/apt/sources.list
-echo "deb-src http://mirrors.ustc.edu.cn/debian/ bullseye-backports main contrib non-free" >> /etc/apt/sources.list
+echo "deb http://mirrors.ustc.edu.cn/debian/ bullseye-backports main contrib" >> /etc/apt/sources.list
+echo "deb-src http://mirrors.ustc.edu.cn/debian/ bullseye-backports main contrib" >> /etc/apt/sources.list
 
 apt-get update
 apt-get upgrade -y
-
-chmod o+x /usr/lib/dbus-1.0/dbus-daemon-launch-helper
-chmod +x /etc/rc.local
 
 export APT_INSTALL="apt-get install -fy --allow-downgrades"
 
@@ -133,6 +119,7 @@ sed -i "s~\(^ExecStart=.*\)~# \1\nExecStart=-/bin/sh -c '/bin/bash -l </dev/%I >
 #---------------power management --------------
 \${APT_INSTALL} pm-utils bsdmainutils
 #cp /etc/Powermanager/triggerhappy.service  /lib/systemd/system/triggerhappy.service
+#sed -i "s/#HandlePowerKey=.*/HandlePowerKey=ignore/" /etc/systemd/logind.conf
 
 #---------------audio--------------
 chmod 755 /usr/lib/pm-utils/sleep.d/02pulseaudio-resume
@@ -157,7 +144,6 @@ gstreamer1.0-plugins-base-apps qtmultimedia5-examples
 \${APT_INSTALL} /packages/gst-plugins-bad1.0/*.deb
 \${APT_INSTALL} /packages/gst-plugins-good1.0/*.deb
 \${APT_INSTALL} /packages/gst-plugins-ugly1.0/*.deb
-\${APT_INSTALL} /packages/gst-libav1.0/*.deb
 
 #---------Camera---------
 echo -e "\033[36m Install camera.................... \033[0m"
@@ -242,6 +228,10 @@ fi
 #------------------rktoolkit------------
 echo -e "\033[36m Install rktoolkit.................... \033[0m"
 \${APT_INSTALL} /packages/rktoolkit/*.deb
+
+#------------------gl4es------------
+# echo -e "\033[36m Install gl4es.................... \033[0m"
+# \${APT_INSTALL} /packages/gl4es/*.deb
 
 echo -e "\033[36m Install Chinese fonts.................... \033[0m"
 # Uncomment zh_CN.UTF-8 for inclusion in generation

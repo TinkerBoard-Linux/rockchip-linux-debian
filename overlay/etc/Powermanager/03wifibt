@@ -25,6 +25,7 @@ case "$1" in
 		if [ ! -z "$hci" ]; then
 			hciconfig hci0 up
 		fi
+		#wifibt-init.sh
                ;;
        *) exit $NA
                ;;
