@@ -104,6 +104,9 @@ select_test_item()
 		echo "19. Audio loopback stress test:: $DO_AUDIO_TEST"
 		echo "20. Audio amplifier stress test:: $DO_AUDIOAMP_TEST"
 		echo "21. LTE modem stress test:: $DO_MODEM_TEST"
+		echo "22. USB HUB JACK check test: $DO_USBHUB_JACK_CHECK"
+		echo "23. USB DAC JACK check test: $DO_USBDAC_JACK_CHECK"
+		echo "24. USB BRIDGE JACK check test: $DO_USBBRIDGE_JACK_CHECK"
 	else
                 echo " 9. UART loopback stress test: $DO_UART_TEST"
                 echo "10. UART1/UART2 RS232 stress test: $DO_UART_to_UART_TEST"
@@ -408,6 +411,8 @@ thermal_logging()
 	fi
 }
 
+declare -A busmonitor1
+declare -A busmonitor2
 get_device_info()
 {
 	cpu_usage=$(top -b -n2 -d0.1 | grep "Cpu(s)" | awk '{print $2+$4+$6+$14 "%"}' | tail -n1)
@@ -444,6 +449,47 @@ get_device_info()
 	fi
 
 	#gpu_usage=`expr $gpu_usage / 10`
+	
+	if [ ! -z "$CMD_DEV1_TEMP" ]; then
+		dev1_temp=`cat  $CMD_DEV1_TEMP`
+		dev1_temp=`awk 'BEGIN{printf "%.2f\n",('$dev1_temp'/1000)}'`
+	fi
+		
+	if [ ! -z "$CMD_DEV2_TEMP" ]; then
+		dev2_temp=`cat  $CMD_DEV2_TEMP`
+		dev2_temp=`awk 'BEGIN{printf "%.2f\n",('$dev2_temp'/1000)}'`
+	fi
+
+
+	if [ ! -z "$CMD_BUSMONITOR1_PATH" ]; then
+
+		for i in $( seq 1 $CMD_BUSMONITOR1_NUM )
+		do
+			current=`cat  $CMD_BUSMONITOR1_PATH/curr${i}_input`
+			voltage=`cat  $CMD_BUSMONITOR1_PATH/in${i}_input`
+			label=`cat  $CMD_BUSMONITOR1_PATH/in${i}_label`
+			busmonitor1[${i}]="Name="$label", voltage="$voltage" mv, current="$current" mA"
+		done
+
+	fi
+
+	if [ ! -z "$CMD_BUSMONITOR2_PATH" ]; then
+
+		for i in $( seq 1 $CMD_BUSMONITOR2_NUM )
+		do
+			current=`cat  $CMD_BUSMONITOR2_PATH/curr${i}_input`
+			voltage=`cat  $CMD_BUSMONITOR2_PATH/in${i}_input`
+			label=`cat  $CMD_BUSMONITOR2_PATH/in${i}_label`
+			busmonitor2[${i}]="Name="$label", voltage="$voltage" mv, current="$current" mA"
+		done
+
+	fi
+	
+	if [[ "$CHECK_MAX32558_VER" == "Y" ]]; then
+		max32558_ver=""
+		max32558_ver=`python3 $SCRIPTPATH/test/max-test-prod/send_scp/src/listen_timeout.py -s /dev/ttyS4 | grep build_ver | tail -n1 | awk '{split($0,a,":"); print a[2]}'`
+	fi	
+
 }
 
 check_status()
@@ -554,6 +600,34 @@ check_usbhub()
         logfile=$LOG_PATH/usbhub.txt
         killall check_usb_hub.sh > /dev/null 2>&1
         $SCRIPTPATH/test/check_usb_hub.sh $logfile
+}
+
+check_usbhub_jack()
+{
+        logfile=$LOG_PATH/usbhubjack.txt
+        killall check_usb_jack_hub.sh > /dev/null 2>&1
+        $SCRIPTPATH/test/check_usb_jack_hub.sh $logfile
+}
+
+check_usbdac_jack()
+{
+        logfile=$LOG_PATH/usbdacjack.txt
+        killall check_usb_jack_hub.sh > /dev/null 2>&1
+        $SCRIPTPATH/test/check_usbdac_jack.sh $logfile
+}
+
+check_usbbridge_jack()
+{
+        logfile=$LOG_PATH/usbbridgejack.txt
+        killall check_usb_jack_hub.sh > /dev/null 2>&1
+        $SCRIPTPATH/test/check_usbbridge_jack.sh $logfile
+}
+
+check_ma32558_version()
+{
+        logfile=$LOG_PATH/check_ma32558_version.txt
+        killall check_ma32558_version.sh > /dev/null 2>&1
+        $SCRIPTPATH/test/check_ma32558_version.sh $logfile
 }
 
 initial_setting()
@@ -691,6 +765,15 @@ check_all_status()
 	fi
         if [ "$DO_USBHUB_CHECK" == "Y" ]; then
                 check_status USBHUB $USBHUB
+        fi
+        if [ "$DO_USBHUB_JACK_CHECK" == "Y" ]; then
+                check_status USBHUBJACK $USBHUBJACK
+        fi
+        if [ "$DO_USBDAC_JACK_CHECK" == "Y" ]; then
+                check_status USBDACJACK $USBDACJACK
+        fi
+        if [ "$DO_USBBRIDGE_JACK_CHECK" == "Y" ]; then
+                check_status USBBRIDGEJACK $USBBRIDGEJACK
         fi
         if [ "$DO_USBCC_TEST" == "Y" ]; then
                 check_status USBCC $USBCC
@@ -859,6 +942,9 @@ WIFI="/test/wifi_stress_test.sh"
 LT9211="/test/lt9211_i2c_test.sh"
 USBCC="/test/cc_i2c_stress_test.sh"
 USBHUB="/test/check_usb_hub.sh"
+USBHUBJACK="/test/check_usb_jack_hub.sh"
+USBDACJACK="/test/check_usbdac_jack.sh"
+USBBRIDGEJACK="/test/check_usbbridge_jack.sh"
 AUDIO="/test/audio/audio_loopback_test.sh"
 AUDIOAMP="/test/audio/audio_amplifier_test.sh"
 
@@ -995,7 +1081,18 @@ case $test_item in
                 info_view MODEM
                 modem_stress_test
                 ;;
-
+	22)
+                info_view USBHUBJACK 
+                check_usbhub_jack
+                ;;
+	23)
+                info_view USBDACJACK 
+                check_usbdac_jack
+                ;;
+	24)
+                info_view USBBRIDGEJACK 
+                check_usbbridge_jack
+                ;;
 	*)
 		check_system_status=true
 		info_view BurnIn
@@ -1080,6 +1177,15 @@ case $test_item in
                 if [ "$DO_USBHUB_CHECK" == "Y" ]; then
                         check_usbhub > /dev/null 2>&1 &
                 fi
+                if [ "$DO_USBHUB_JACK_CHECK" == "Y" ]; then
+                        check_usbhub_jack > /dev/null 2>&1 &
+                fi
+                if [ "$DO_USBDAC_JACK_CHECK" == "Y" ]; then
+                        check_usbdac_jack > /dev/null 2>&1 &
+                fi
+                if [ "$DO_USBBRIDGE_JACK_CHECK" == "Y" ]; then
+                        check_usbbridge_jack > /dev/null 2>&1 &
+                fi
                 if [ "$DO_USBCC_TEST" == "Y" ]; then
                         usbcc_stress_test > /dev/null 2>&1 &
                 fi
@@ -1104,9 +1210,40 @@ while true; do
 	log "GPU Usage      = $gpu_usage"
 	log "CPU temp       = $cpu_temp 'C"
 	log "GPU temp       = $gpu_temp 'C"
+
+	if [ ! -z "$CMD_DEV1_TEMP" ]; then
+		log "DEV1 temp       = $dev1_temp 'C"
+	fi
+	if [ ! -z "$CMD_DEV2_TEMP" ]; then
+		log "DEV2 temp       = $dev2_temp 'C"
+	fi
+
 	log "CPU freq       = $cpu_freq GHz"
 	log "GPU freq       = $gpu_freq MHz"
 	log "DDR freq       = $ddr_freq MHz"
+	log ""
+	if [ ! -z "$CMD_BUSMONITOR1_PATH" ]; then
+		log "BUS_MONITOR1:"
+		for i in "${busmonitor1[@]}"
+		do
+			log "\t$i"
+		done
+
+	fi
+
+	if [ ! -z "$CMD_BUSMONITOR2_PATH" ]; then
+		log "BUS_MONITOR2:"
+		for i in "${busmonitor2[@]}"
+		do
+			log "\t$i"
+		done
+
+	fi
+	
+	if [[ "$CHECK_MAX32558_VER" == "Y" ]]; then
+		log "MAX32558 version       = $max32558_ver"
+	fi
+	
 	log ""
         log "$PROJECT test from $start_time, diff= $diff sec"
 	log "Test Status"
