@@ -2,6 +2,7 @@
 
 DIOIN=507
 DIOOUTPUT=474
+POWER=494
 
 function gpio {
     GPIO=$1
@@ -9,7 +10,9 @@ function gpio {
 
     case $ACTION in
     acquire)
-        echo $GPIO > /sys/class/gpio/export
+	if [[ ! -d "/sys/class/gpio/gpio${GPIO}/" ]]; then
+                echo $GPIO > /sys/class/gpio/export
+	fi
         ;;
     release)
         echo $GPIO > /sys/class/gpio/unexport
@@ -38,6 +41,28 @@ gpio $DIOIN input
     
 gpio $DIOOUTPUT acquire
 gpio $DIOOUTPUT output
+
+gpio $POWER acquire
+gpio $POWER output
+gpio $POWER low
+
+gpio $DIOOUTPUT high
+result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
+if [ "$result" == "0" ]; then
+        echo "FAIL"
+        exit
+fi
+
+gpio $DIOOUTPUT low
+result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
+if [ "$result" == "0" ]; then
+        echo "FAIL"
+        exit
+fi
+
+gpio $POWER high
+
+sleep 1
 
 gpio $DIOOUTPUT high
 result=$(cat /sys/class/gpio/gpio${DIOIN}/value)

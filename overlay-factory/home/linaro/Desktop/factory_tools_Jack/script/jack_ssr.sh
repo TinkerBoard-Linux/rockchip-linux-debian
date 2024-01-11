@@ -1,8 +1,8 @@
 #!/bin/bash
 
-DIOIN=508
-DIOOUTPUT=483
-POWER=492
+DIOIN=463
+DIOOUTPUT=470
+POWER=491
 
 function gpio {
     GPIO=$1
@@ -42,40 +42,30 @@ gpio $DIOIN input
 gpio $DIOOUTPUT acquire
 gpio $DIOOUTPUT output
 
-gpio $POWER acquire
-gpio $POWER output
-gpio $POWER low
-
 gpio $DIOOUTPUT high
-result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
-if [ "$result" == "0" ]; then
-        echo "FAIL"
-        exit
-fi
-
-gpio $DIOOUTPUT low
-result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
-if [ "$result" == "0" ]; then
-        echo "FAIL"
-        exit
-fi
-
-gpio $POWER high
-
-sleep 1
-
-gpio $DIOOUTPUT high
-result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
-if [ "$result" == "0" ]; then
-        echo "FAIL"
-        exit
-fi
-
-gpio $DIOOUTPUT low
 result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
 if [ "$result" == "1" ]; then
         echo "FAIL"
         exit
+fi
+
+eeprom=$(i2cdetect -y 5 | grep 58)
+if [ ! "$eeprom" ]; then
+	echo "FAIL"
+	exit
+fi
+
+gpio $DIOOUTPUT low
+result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
+if [ "$result" == "0" ]; then
+        echo "FAIL"
+        exit
+fi
+
+eeprom=$(i2cdetect -y 5 | grep 58)
+if [ -n "$eeprom" ]; then
+	echo "FAIL"
+	exit
 fi
 
 echo "PASS"
