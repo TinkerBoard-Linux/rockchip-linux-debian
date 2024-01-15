@@ -33,7 +33,7 @@ function gpio {
         echo "Unsupported Parameter"
         ;;
     esac
-    sleep 1
+    sleep 0.5
 }
 
 gpio $DIOIN acquire

@@ -33,7 +33,7 @@ function gpio {
         echo "Unsupported Parameter"
         ;;
     esac
-    sleep 1
+    sleep 0.5
 }
 
 gpio $DIOIN acquire
@@ -62,7 +62,7 @@ fi
 
 gpio $POWER high
 
-sleep 1
+sleep 0.5
 
 gpio $DIOOUTPUT high
 result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
