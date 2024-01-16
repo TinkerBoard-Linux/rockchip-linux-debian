@@ -1010,7 +1010,8 @@ Currently some features may not be available as they were not originally designe
       "4 Internationalisation Options" "Set up language and regional settings to match your location" \
       "5 Interfacing Options" "Configure connections to peripherals" \
       "6 Advanced Options" "Configure advanced settings" \
-      "7 About tinker-config" "Information about this configuration tool" \
+      "7 Power Management Tool" "Run the power management tool" \
+      "8 About tinker-config" "Information about this configuration tool" \
       3>&1 1>&2 2>&3)
     RET=$?
     if [ $RET -eq 1 ]; then
@@ -1023,7 +1024,8 @@ Currently some features may not be available as they were not originally designe
         4\ *) do_internationalisation_menu ;;
         5\ *) do_interface_menu ;;
         6\ *) do_advanced_menu ;;
-        7\ *) do_about ;;
+	7\ *) do_power_management_tool ;;
+        8\ *) do_about ;;
         *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
       esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
     else
