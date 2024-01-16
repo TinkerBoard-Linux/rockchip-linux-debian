@@ -121,6 +121,9 @@ sed -i "s~\(^ExecStart=.*\)~# \1\nExecStart=-/bin/sh -c '/bin/bash -l </dev/%I >
 #cp /etc/Powermanager/triggerhappy.service  /lib/systemd/system/triggerhappy.service
 #sed -i "s/#HandlePowerKey=.*/HandlePowerKey=ignore/" /etc/systemd/logind.conf
 
+#---------------Virtual keyboard--------------
+\${APT_INSTALL} onboard onboard-common
+
 #---------------audio--------------
 chmod 755 /usr/lib/pm-utils/sleep.d/02pulseaudio-resume
 chmod 755 /etc/pulse/switch_sound_device.sh
