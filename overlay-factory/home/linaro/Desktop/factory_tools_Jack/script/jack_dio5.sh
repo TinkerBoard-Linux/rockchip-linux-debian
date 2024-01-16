@@ -2,6 +2,7 @@
 
 DIOIN=497
 DIOOUTPUT=464
+SSR_EN=470
 POWER=481
 
 function gpio {
@@ -42,27 +43,13 @@ gpio $DIOIN input
 gpio $DIOOUTPUT acquire
 gpio $DIOOUTPUT output
 
+gpio $SSR_EN acquire
+gpio $SSR_EN output
+gpio $SSR_EN low
+
 gpio $POWER acquire
 gpio $POWER output
-gpio $POWER low
-
-gpio $DIOOUTPUT high
-result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
-if [ "$result" == "0" ]; then
-        echo "FAIL"
-        exit
-fi
-
-gpio $DIOOUTPUT low
-result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
-if [ "$result" == "0" ]; then
-        echo "FAIL"
-        exit
-fi
-
 gpio $POWER high
-
-sleep 0.5
 
 gpio $DIOOUTPUT high
 result=$(cat /sys/class/gpio/gpio${DIOIN}/value)

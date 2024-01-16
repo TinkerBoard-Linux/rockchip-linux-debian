@@ -2,7 +2,9 @@
 
 DIOIN=463
 DIOOUTPUT=470
-POWER=491
+DIO5_OUT=464
+DIO5_IN=497
+DIO5_POWER=481
 
 function gpio {
     GPIO=$1
@@ -38,7 +40,18 @@ function gpio {
 
 gpio $DIOIN acquire
 gpio $DIOIN input
-    
+
+gpio $DIO5_IN acquire
+gpio $DIO5_IN input
+
+gpio $DIO5_OUT acquire
+gpio $DIO5_OUT output
+gpio $DIO5_OUT low
+
+gpio $DIO5_POWER acquire
+gpio $DIO5_POWER output
+gpio $DIO5_POWER high
+
 gpio $DIOOUTPUT acquire
 gpio $DIOOUTPUT output
 
@@ -49,10 +62,10 @@ if [ "$result" == "1" ]; then
         exit
 fi
 
-eeprom=$(i2cdetect -y 5 | grep 58)
-if [ ! "$eeprom" ]; then
-	echo "FAIL"
-	exit
+result=$(cat /sys/class/gpio/gpio${DIO5_IN}/value)
+if [ "$result" == "0" ]; then
+        echo "FAIL"
+        exit
 fi
 
 gpio $DIOOUTPUT low
@@ -62,10 +75,10 @@ if [ "$result" == "0" ]; then
         exit
 fi
 
-eeprom=$(i2cdetect -y 5 | grep 58)
-if [ -n "$eeprom" ]; then
-	echo "FAIL"
-	exit
+result=$(cat /sys/class/gpio/gpio${DIO5_IN}/value)
+if [ "$result" == "1" ]; then
+        echo "FAIL"
+        exit
 fi
 
 echo "PASS"
