@@ -246,6 +246,54 @@ function Blizzard_HDMI()
 	echo "on" > /sys/class/drm/card1-LVDS-1/status
 }
 
+function Tinker_3N_LVDS()
+{
+	hdmi_status=$(cat /sys/class/drm/card0-HDMI-A-1/status)
+	#su linaro -c "gst-launch-1.0 -v filesrc location=/home/linaro/Desktop/1.jpg ! jpegdec ! imagefreeze ! videoconvert ! autovideosink"
+	if [ $hdmi_status = "connected" ]; then
+		#su linaro -c "gst-launch-1.0 filesrc location=$Tinker_3_Video_Path ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! autoaudiosink decoder. ! videoconvert ! kmssink connector-id=173"
+		su linaro -c "gst-launch-1.0 -v filesrc location=$Tinker_3_Image_Path ! jpegdec ! imagefreeze ! videoconvert ! kmssink connector-id=173"
+	else
+		#su linaro -c "gst-launch-1.0 filesrc location=$Tinker_3_Video_Path ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! autoaudiosink decoder. ! videoconvert ! kmssink"
+		su linaro -c "gst-launch-1.0 -v filesrc location=$Tinker_3_Image_Path ! jpegdec ! imagefreeze ! videoconvert ! kmssink"
+	fi
+}
+
+function Tinker_3N_EDP()
+{
+	hdmi_status=$(cat /sys/class/drm/card0-HDMI-A-1/status)
+	#su linaro -c "gst-launch-1.0 -v filesrc location=/home/linaro/Desktop/1.jpg ! jpegdec ! imagefreeze ! videoconvert ! autovideosink"
+	if [ $hdmi_status = "connected" ]; then
+		#su linaro -c "gst-launch-1.0 filesrc location=$Tinker_3_Video_Path ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! autoaudiosink decoder. ! videoconvert ! kmssink connector-id=157"
+		su linaro -c "gst-launch-1.0 -v filesrc location=$Tinker_3_Image_Path ! jpegdec ! imagefreeze ! videoconvert ! kmssink connector-id=157"
+	else
+		#su linaro -c "gst-launch-1.0 filesrc location=$Tinker_3_Video_Path ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! autoaudiosink decoder. ! videoconvert ! kmssink"
+		su linaro -c "gst-launch-1.0 -v filesrc location=$Tinker_3_Image_Path ! jpegdec ! imagefreeze ! videoconvert ! kmssink"
+	fi
+}
+
+function Tinker_3N_HDMI()
+{
+	#su linaro -c "gst-launch-1.0 -v filesrc location=/home/linaro/Desktop/1.jpg ! jpegdec ! imagefreeze ! videoconvert ! autovideosink"
+	if [ -d "/sys/class/drm/card0-DSI-1/" ]; then
+		dsi_status=$(cat /sys/class/drm/card0-DSI-1/status)
+		if [ $dsi_status = "connected" ]; then
+			#su linaro -c "gst-launch-1.0 filesrc location=$Tinker_3_Video_Path ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! autoaudiosink decoder. ! videoconvert ! kmssink connector-id=157"
+			su linaro -c "gst-launch-1.0 -v filesrc location=$Tinker_3_Image_Path ! jpegdec ! imagefreeze ! videoconvert ! kmssink connector-id=157"
+		fi
+	elif [ -d "/sys/class/drm/card0-eDP-1/" ]; then
+		edp_status=$(cat /sys/class/drm/card0-eDP-1/status)
+		if [ $edp_status = "connected" ]; then
+			#su linaro -c "gst-launch-1.0 filesrc location=$Tinker_3_Video_Path ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! autoaudiosink decoder. ! videoconvert ! kmssink connector-id=159"
+			su linaro -c "gst-launch-1.0 -v filesrc location=$Tinker_3_Image_Path ! jpegdec ! imagefreeze ! videoconvert ! kmssink connector-id=159"
+		fi
+	else
+		#su linaro -c "gst-launch-1.0 filesrc location=$Tinker_3_Video_Path ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! autoaudiosink decoder. ! videoconvert ! kmssink"
+		su linaro -c "gst-launch-1.0 -v filesrc location=$Tinker_3_Image_Path ! jpegdec ! imagefreeze ! videoconvert ! kmssink"
+
+	fi
+}
+
 function Tinker_3_LVDS()
 {
 	hdmi_status=$(cat /sys/class/drm/card0-HDMI-A-1/status)
@@ -292,6 +340,19 @@ function Tinker_3_HDMI()
 		su linaro -c "gst-launch-1.0 -v filesrc location=$Tinker_3_Image_Path ! jpegdec ! imagefreeze ! videoconvert ! kmssink"
 
 	fi
+}
+
+function Tinker_3_DSI()
+{
+	#hdmi_status=$(cat /sys/class/drm/card0-HDMI-A-1/status)
+	#su linaro -c "gst-launch-1.0 -v filesrc location=/home/linaro/Desktop/1.jpg ! jpegdec ! imagefreeze ! videoconvert ! autovideosink"
+	#if [ $hdmi_status = "connected" ]; then
+		#su linaro -c "gst-launch-1.0 filesrc location=$Tinker_3_Video_Path ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! autoaudiosink decoder. ! videoconvert ! kmssink connector-id=173"
+		#su linaro -c "gst-launch-1.0 -v filesrc location=$Tinker_3_Image_Path ! jpegdec ! imagefreeze ! videoconvert ! kmssink connector-id=173"
+	#else
+		#su linaro -c "gst-launch-1.0 filesrc location=$Tinker_3_Video_Path ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! autoaudiosink decoder. ! videoconvert ! kmssink"
+		su linaro -c "gst-launch-1.0 -v filesrc location=$Tinker_3_Image_Path ! jpegdec ! imagefreeze ! videoconvert ! kmssink"
+	#fi
 }
 
 function check_edid()
@@ -409,6 +470,22 @@ elif [ "$1" == "8" ];then
 elif [ "$1" == "9" ];then
 	export XDG_RUNTIME_DIR=/run/user/$UID
 	if [ "$2" == "LVDS" ];then
+		echo -e "Run Tinker3N LVDS Test" | tee -a $ResultFile
+		Tinker_3N_LVDS
+	elif [ "$2" == "HDMI" ];then
+		echo -e "Run Tinker3N HDMI Test" | tee -a $ResultFile
+		check_edid
+		Tinker_3N_HDMI
+	elif [ "$2" == "EDP" ];then
+		echo -e "Run Tinker3N EDP Test" | tee -a $ResultFile
+		Tinker_3N_EDP
+	else
+		echo -e "Error parameter, parameter two only can set EDP or LVDS or HDMI !!" | tee -a $ResultFile
+		END
+	fi
+elif [ "$1" == "10" ];then
+	export XDG_RUNTIME_DIR=/run/user/$UID
+	if [ "$2" == "LVDS" ];then
 		echo -e "Run Tinker3 LVDS Test" | tee -a $ResultFile
 		Tinker_3_LVDS
 	elif [ "$2" == "HDMI" ];then
@@ -418,8 +495,11 @@ elif [ "$1" == "9" ];then
 	elif [ "$2" == "EDP" ];then
 		echo -e "Run Tinker3 EDP Test" | tee -a $ResultFile
 		Tinker_3_EDP
+	elif [ "$2" == "DSI" ];then
+		echo -e "Run Tinker3 DSI Test" | tee -a $ResultFile
+		Tinker_3_DSI
 	else
-		echo -e "Error parameter, parameter two only can set LVDS or HDMI !!" | tee -a $ResultFile
+		echo -e "Error parameter, parameter two only can set DSI or EDP or LVDS or HDMI !!" | tee -a $ResultFile
 		END
 	fi
 else
@@ -432,6 +512,7 @@ else
 	echo -e "6).PE100A"
 	echo -e "7).PV100A"
 	echo -e "8).Blizzard"
-	echo -e "9).Tinker3"
+	echo -e "9).Tinker3N"
+	echo -e "10).Tinker3"
 	END
 fi
