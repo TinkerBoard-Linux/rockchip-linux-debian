@@ -489,6 +489,10 @@ get_device_info()
 		max32558_ver=""
 		max32558_ver=`python3 $SCRIPTPATH/test/max-test-prod/send_scp/src/listen_timeout.py -s /dev/ttyS4 | grep build_ver | tail -n1 | awk '{split($0,a,":"); print a[2]}'`
 	fi	
+	
+	if [ ! -z "$CMD_ADCHWID_FILE" ]; then
+		adchwid=`$SCRIPTPATH/test/jack_adc.sh`
+	fi
 
 }
 
@@ -1239,9 +1243,13 @@ while true; do
 		done
 
 	fi
-	
+
 	if [[ "$CHECK_MAX32558_VER" == "Y" ]]; then
 		log "MAX32558 version       = $max32558_ver"
+	fi
+
+	if [ ! -z "$CMD_ADCHWID_FILE" ]; then
+		log "ADC HW ID:       = $adchwid"
 	fi
 	
 	log ""
