@@ -1,0 +1,5 @@
+﻿#!/bin/bash -e
+
+Reg="$1"
+
+echo ${Reg} > /sys/class/gpio/export 
