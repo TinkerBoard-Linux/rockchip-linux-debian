@@ -223,7 +223,7 @@ if [ -e "/usr/lib/aarch64-linux-gnu" ] ;
 then
 #------------------rknpu2------------
 echo -e "\033[36m move rknpu2.................... \033[0m"
-mv /packages/rknpu2/*.tar  /
+mv /packages/rknpu2/rknpu2.tar  /
 fi
 
 #------------------rktoolkit------------
