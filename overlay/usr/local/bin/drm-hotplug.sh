@@ -131,9 +131,9 @@ if [ $dp_status = "connected" ]; then
 fi
 
 # Config audio output devices when HDMI hot-plug
-if [ $jack_tb3n_status = 0 ] || [ $jack_tb3_status = 0 ];
+if [ $hdmi_status = "connected" ];
 then
-	if [ $hdmi_status = "connected" ];
+	if [ $jack_tb3n_status = 0 ] || [ $jack_tb3_status = 0 ];
 	then
 		echo "Plug-in HDMI, set default sound card to HDMI"
 		/etc/pulse/switch_sound_device.sh "alsa_output.platform-hdmi-sound.stereo-fallback"

@@ -4,9 +4,9 @@ hdmi_status=$(cat /sys/class/drm/card0-HDMI-A-1/status)
 jack_tb3n_status=$(cat /sys/class/extcon/extcon4/cable.1/state)
 jack_tb3_status=$(cat /sys/class/extcon/extcon3/cable.1/state)
 
-if [ $jack_tb3n_status = 0 ] || [ $jack_tb3_status = 0 ];
+if [ $hdmi_status = "connected" ];
 then
-	if [ $hdmi_status = "connected" ];
+	if [ $jack_tb3n_status = 0 ] || [ $jack_tb3_status = 0 ];
 	then
 		echo "HDMI is connected, set default sound card to HDMI"
 		/bin/bash /etc/pulse/switch_sound_device.sh "alsa_output.platform-hdmi-sound.stereo-fallback"
