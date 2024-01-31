@@ -12,7 +12,7 @@ log()
 while [ 1 != 2 ]
 do
 	counter=`lsusb|grep "05e3:0610"|wc -l`
-	if [ "$counter" -ge 4 ]; then
+	if [ "$counter" -ge 3 ]; then
 		log "Found Genesys Logic usb 2.0 hub."
 		((u2_pass_cnt+=1))
 		u2_fail_cnt=0
