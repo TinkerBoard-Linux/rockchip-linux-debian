@@ -107,6 +107,8 @@ select_test_item()
 		echo "22. USB HUB JACK check test: $DO_USBHUB_JACK_CHECK"
 		echo "23. USB DAC JACK check test: $DO_USBDAC_JACK_CHECK"
 		echo "24. USB BRIDGE JACK check test: $DO_USBBRIDGE_JACK_CHECK"
+                echo "25. USB BRIDGE JACK EEPROM stress test: $DO_USBBRIDGE_EEPROM_TEST"
+                echo "26. I2C5 EEPROM stress test: $DO_I2C_EEPROM_TEST"
 	else
                 echo " 9. UART loopback stress test: $DO_UART_TEST"
                 echo "10. UART1/UART2 RS232 stress test: $DO_UART_to_UART_TEST"
@@ -374,6 +376,18 @@ eeprom_stress_test()
 	logfile=$LOG_PATH/eeprom.txt
 	killall eeprom_stress_test.sh > /dev/null 2>&1
 	$SCRIPTPATH/test/eeprom_stress_test.sh $logfile
+}
+usbbridge_eeprom_stress_test()
+{
+        logfile=$LOG_PATH/usbbridge_eeprom.txt
+        killall usbbridge_eeprom_stress_test.sh > /dev/null 2>&1
+        $SCRIPTPATH/test/usbbridge_eeprom_stress_test.sh $logfile
+}
+i2c5_eeprom_stress_test()
+{
+        logfile=$LOG_PATH/i2c5_eeprom.txt
+        killall i2c5_eeprom_stress_test.sh > /dev/null 2>&1
+        $SCRIPTPATH/test/i2c5_eeprom_stress_test.sh $logfile
 }
 modem_stress_test()
 {
@@ -758,6 +772,14 @@ check_all_status()
 		check_status EEPROM $EEPROM
 	fi
 
+        if [ "$DO_USBBRIDGE_EEPROM_TEST" == "Y" ]; then
+                check_status USBBRIDGE_EEPROM $USBBRIDGE_EEPROM
+        fi
+
+        if [ "$DO_I2C5_EEPROM_TEST" == "Y" ]; then
+                check_status I2C5_EEPROM $I2C5_EEPROM
+        fi
+
 	if [ "$DO_MODEM_TEST" == "Y" ]; then
 		check_status MODEM $MODEM
 	fi
@@ -939,6 +961,8 @@ GPS="../GPS_test/gpstest"
 NPU="npu_stress_test.sh"
 RTC="/test/rtc_stress_test.sh"
 EEPROM="/test/eeprom_stress_test.sh"
+USBBRIDGE_EEPROM="/test/usbbridge_eeprom_stress_test.sh"
+I2C5_EEPROM="/test/i2c5_eeprom_stress_test.sh"
 MODEM="/test/modem_stress_test.sh"
 SIM="/test/sim_stress_test.sh"
 BLUETOOTH="/test/bluetooth_stress_test.sh"
@@ -1097,6 +1121,15 @@ case $test_item in
                 info_view USBBRIDGEJACK 
                 check_usbbridge_jack
                 ;;
+        25)
+                info_view USBBRIDGE_EEPROM
+                usbbridge_eeprom_stress_test
+                ;;
+        26)
+                info_view I2C5_EEPROM
+                i2c5_eeprom_stress_test
+                ;;
+
 	*)
 		check_system_status=true
 		info_view BurnIn
@@ -1166,6 +1199,12 @@ case $test_item in
 		if [ "$DO_EEPROM_TEST" == "Y" ]; then
 			eeprom_stress_test > /dev/null 2>&1 &
 		fi
+                if [ "$DO_USBBRIDGE_EEPROM_TEST" == "Y" ]; then
+                        usbbridge_eeprom_stress_test > /dev/null 2>&1 &
+                fi
+                if [ "$DO_I2C5_EEPROM_TEST" == "Y" ]; then
+                        i2c5_eeprom_stress_test > /dev/null 2>&1 &
+                fi
 		if [ "$DO_MODEM_TEST" == "Y" ]; then
 			modem_stress_test > /dev/null 2>&1 &
 		fi
