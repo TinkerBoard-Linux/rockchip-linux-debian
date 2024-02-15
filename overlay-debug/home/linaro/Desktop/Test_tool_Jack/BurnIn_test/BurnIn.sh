@@ -108,7 +108,12 @@ select_test_item()
 		echo "23. USB DAC JACK check test: $DO_USBDAC_JACK_CHECK"
 		echo "24. USB BRIDGE JACK check test: $DO_USBBRIDGE_JACK_CHECK"
                 echo "25. USB BRIDGE JACK EEPROM stress test: $DO_USBBRIDGE_EEPROM_TEST"
-                echo "26. I2C5 EEPROM stress test: $DO_I2C_EEPROM_TEST"
+                echo "26. I2C5 EEPROM stress test: $DO_I2C5_EEPROM_TEST"
+                echo "27. TEMP1 JACK stress test: $DO_TEMP1_JACK_TEST"
+                echo "28. TEMP2 JACK stress test: $DO_TEMP2_JACK_TEST"
+                echo "29. MAX32558 VERSION stress test: $DO_MAX32558_VER_TEST"
+                echo "30. BUSMONITOR1 JACK stress test: $DO_BUSMONITOR1_JACK_TEST"
+                echo "31. BUSMONITOR2 JACK stress test: $DO_BUSMONITOR2_JACK_TEST"
 	else
                 echo " 9. UART loopback stress test: $DO_UART_TEST"
                 echo "10. UART1/UART2 RS232 stress test: $DO_UART_to_UART_TEST"
@@ -369,6 +374,41 @@ rtc_stress_test()
 	logfile=$LOG_PATH/rtc.txt
 	killall rtc_stress_test.sh > /dev/null 2>&1
 	$SCRIPTPATH/test/rtc_stress_test.sh $logfile
+}
+
+jack_temp1_stress_test()
+{
+	logfile=$LOG_PATH/jack_temp1.txt
+	killall jack_temp1_stress_test.sh > /dev/null 2>&1
+	$SCRIPTPATH/test/jack_temp1_stress_test.sh $logfile
+}
+
+jack_temp2_stress_test()
+{
+	logfile=$LOG_PATH/jack_temp2.txt
+	killall jack_temp2_stress_test.sh > /dev/null 2>&1
+	$SCRIPTPATH/test/jack_temp2_stress_test.sh $logfile
+}
+
+jack_ma32558ver_stress_test()
+{
+	logfile=$LOG_PATH/jack_ma32558ver.txt
+	killall jack_ma32558ver_stress_test.sh > /dev/null 2>&1
+	$SCRIPTPATH/test/jack_ma32558ver_stress_test.sh $logfile $SCRIPTPATH
+}
+
+jack_busmonitor1_stress_test()
+{
+	logfile=$LOG_PATH/jack_busmonitor1.txt
+	killall jack_busmonitor1_stress_test.sh > /dev/null 2>&1
+	$SCRIPTPATH/test/jack_busmonitor1_stress_test.sh $logfile $CMD_BUSMONITOR1_PATH $CMD_BUSMONITOR1_NUM
+}
+
+jack_busmonitor2_stress_test()
+{
+	logfile=$LOG_PATH/jack_busmonitor2.txt
+	killall jack_busmonitor2_stress_test.sh > /dev/null 2>&1
+	$SCRIPTPATH/test/jack_busmonitor2_stress_test.sh $logfile $CMD_BUSMONITOR2_PATH $CMD_BUSMONITOR2_NUM
 }
 
 eeprom_stress_test()
@@ -768,6 +808,26 @@ check_all_status()
 		check_status RTC $RTC
 	fi
 
+	if [ "$DO_TEMP1_JACK_TEST" == "Y" ]; then
+		check_status TEMP1_JACK $TEMP1_JACK
+	fi
+
+	if [ "$DO_TEMP2_JACK_TEST" == "Y" ]; then
+		check_status TEMP2_JACK $TEMP2_JACK
+	fi
+
+	if [ "$DO_MAX32558_VER_TEST" == "Y" ]; then
+		check_status MAX32558VER $MAX32558VER
+	fi
+
+	if [ "$DO_BUSMONITOR1_JACK_TEST" == "Y" ]; then
+		check_status BUSMONITOR1_JACK $BUSMONITOR1_JACK
+	fi
+
+	if [ "$DO_BUSMONITOR2_JACK_TEST" == "Y" ]; then
+		check_status BUSMONITOR2_JACK $BUSMONITOR2_JACK
+	fi
+
 	if [ "$DO_EEPROM_TEST" == "Y" ]; then
 		check_status EEPROM $EEPROM
 	fi
@@ -847,6 +907,11 @@ kill_test(){
 	killall lt9211_i2c_test.sh > /dev/null 2>&1
 	killall eeprom_stress_test.sh > /dev/null 2>&1
 	killall rtc_stress_test.sh > /dev/null 2>&1
+	killall jack_temp1_stress_test.sh > /dev/null 2>&1
+	killall jack_temp2_stress_test.sh > /dev/null 2>&1
+	killall jack_ma32558ver_stress_test.sh > /dev/null 2>&1
+	killall jack_busmonitor1_stress_test.sh > /dev/null 2>&1
+	killall jack_busmonitor2_stress_test.sh > /dev/null 2>&1
 	killall led_test.sh > /dev/null 2>&1
 	led_disable
 	killall check_usb_hub.sh > /dev/null 2>&1
@@ -960,6 +1025,11 @@ TPU="/test/tpu_stress_test.sh"
 GPS="../GPS_test/gpstest"
 NPU="npu_stress_test.sh"
 RTC="/test/rtc_stress_test.sh"
+TEMP1_JACK="/test/jack_temp1_stress_test.sh"
+TEMP2_JACK="/test/jack_temp2_stress_test.sh"
+MAX32558VER="/test/jack_ma32558ver_stress_test.sh"
+BUSMONITOR1_JACK="/test/jack_busmonitor1_stress_test.sh"
+BUSMONITOR2_JACK="/test/jack_busmonitor2_stress_test.sh"
 EEPROM="/test/eeprom_stress_test.sh"
 USBBRIDGE_EEPROM="/test/usbbridge_eeprom_stress_test.sh"
 I2C5_EEPROM="/test/i2c5_eeprom_stress_test.sh"
@@ -1129,7 +1199,26 @@ case $test_item in
                 info_view I2C5_EEPROM
                 i2c5_eeprom_stress_test
                 ;;
-
+        27)
+                info_view TEMP1_JACK
+                jack_temp1_stress_test
+                ;;
+        28)
+                info_view TEMP2_JACK
+                jack_temp2_stress_test
+                ;;
+        29)
+                info_view MAX32558VER
+                jack_ma32558ver_stress_test
+                ;;
+        30)
+                info_view BUSMONITOR1_JACK
+                jack_busmonitor1_stress_test
+                ;;
+        31)
+                info_view BUSMONITOR2_JACK
+                jack_busmonitor2_stress_test
+                ;;
 	*)
 		check_system_status=true
 		info_view BurnIn
@@ -1195,6 +1284,21 @@ case $test_item in
 		fi
 		if [ "$DO_RTC_TEST" == "Y" ]; then
 			rtc_stress_test > /dev/null 2>&1 &
+		fi
+		if [ "$DO_TEMP1_JACK_TEST" == "Y" ]; then
+			jack_temp1_stress_test > /dev/null 2>&1 &
+		fi
+		if [ "$DO_TEMP2_JACK_TEST" == "Y" ]; then
+			jack_temp2_stress_test > /dev/null 2>&1 &
+		fi
+		if [ "$DO_MAX32558_VER_TEST" == "Y" ]; then
+			jack_ma32558ver_stress_test > /dev/null 2>&1 &
+		fi
+		if [ "$DO_BUSMONITOR1_JACK_TEST" == "Y" ]; then
+			jack_busmonitor1_stress_test > /dev/null 2>&1 &
+		fi
+		if [ "$DO_BUSMONITOR2_JACK_TEST" == "Y" ]; then
+			jack_busmonitor2_stress_test > /dev/null 2>&1 &
 		fi
 		if [ "$DO_EEPROM_TEST" == "Y" ]; then
 			eeprom_stress_test > /dev/null 2>&1 &
