@@ -213,6 +213,8 @@ ln -rsf /usr/lib/*/libv4l2.so /usr/lib/
 
 # sync system time
 hwclock --systohc
+# workaround the rtc hardware reset 
+hwclock -w
 
 # read mac-address from efuse
 # if [ "$BOARDNAME" == "rk3288-miniarm" ]; then
