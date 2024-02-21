@@ -47,11 +47,11 @@ if [ "$#" == 1 ]; then
 		fi
 	elif [ "$1" == "emmc" ]; then
 		dev=/dev/mmcblk0
-		uboot_img=$uboot_path/sdcard_uboot.img
+		uboot_img=$(ls -1 $uboot_path/sdcard_uboot* 2>/dev/null)
 
 		lsblk | grep mmcblk0
 		[ $? -eq 0 ] || { echo "No eMMC"; exit -1; }
-		[ -f $uboot_img ] || { echo "$uboot_img unfound"; exit -1; }
+		[ -z $uboot_img ] && { echo "$uboot_path/sdcard_uboot*.img unfound"; exit -1; }
 
 		uboot_size=$(ls -al $uboot_img | awk '{print $5}')
 		uboot_size_MB=$(($uboot_size/1048576))
