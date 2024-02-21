@@ -9,7 +9,7 @@ AP_PW=$2
 interface_wifi=$(/sbin/ifconfig | egrep "wlan0|wlp1s0" | awk '{print$1}' | awk '{ gsub(/:/,""); print }')
 
 if [ "$interface_wifi" != "" ]; then
-    sudo nmcli connection delete $AP_NAME > /dev/null 2>$2
+    sudo nmcli connection delete $AP_NAME > /dev/null 2>&1
     sudo nmcli dev wifi rescan
     sleep 3
     scan_ap=$(nmcli dev wifi | grep -w "${AP_NAME}" | awk '{print$1}')
@@ -34,11 +34,17 @@ if [ "$interface_wifi" != "" ]; then
     GW=$(/sbin/route -n | grep "${interface_wifi}" | grep UG | awk '{printf $2}')
     #echo "GW=$GW"
     if [[ -n "$GW" ]]; then
-        sudo ping $GW -w 100 -c 4 > /dev/null 2>&1
-	if [ ! $? -eq 0 ]; then
-		echo "FAIL, ret=-4"
-		exit
-	fi
+		sudo ping $GW -w 100 -c 4 > /tmp/ping.result 2>&1
+		if [ ! $? -eq 0 ]; then
+			echo "FAIL, ret=-4"
+			exit
+		fi
+
+		PIN_RESULT=$(cat /tmp/ping.result | grep "0% packet loss" | wc -l);
+		if [ "$PIN_RESULT" == "0" ]; then
+			echo "FAIL, ret=-4"
+			exit
+		fi
     else
         echo "FAIL, ret=-4"
 	exit
