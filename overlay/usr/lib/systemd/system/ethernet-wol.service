@@ -1,0 +1,11 @@
+[Unit]
+Description=WOL function
+
+[Service]
+Type=idle
+ExecStart=/etc/network/ethernet_wol.sh
+ExecStop=/etc/network/ethernet_wol.sh
+ExecReload=/etc/network/ethernet_wol.sh
+
+[Install]
+WantedBy=multi-user.target

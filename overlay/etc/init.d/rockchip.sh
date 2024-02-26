@@ -154,6 +154,7 @@ elif [ -e /usr/lib/systemd/system/rkaiq_3A.service ]; then
 fi
     touch /usr/local/first_boot_flag
 
+    systemctl restart ethernet-wol.service
 fi
 
 # set cpu governor and frequence
@@ -221,9 +222,6 @@ hwclock -w
 #     MAC=`xxd -s 16 -l 6 -g 1 /sys/bus/nvmem/devices/rockchip-efuse0/nvmem | awk '{print $2$3$4$5$6$7 }'`
 #     ifconfig eth0 hw ether $MAC
 # fi
-
-# Enable WOL function
-/etc/network/ethernet_wol.sh
 
 # set act-led trigger function
 if [ -e "/sys/class/leds/act-led/trigger" ]; then

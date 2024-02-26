@@ -132,6 +132,7 @@ chmod 755 /usr/local/bin/switch_sound_device_boot.sh
 
 #---------------ethernet---------------
 chmod 755 /etc/network/ethernet_wol.sh
+ln -s /usr/lib/systemd/system/ethernet-wol.service /etc/systemd/system/multi-user.target.wants/ethernet-wol.service
 
 #---------------Rga--------------
 \${APT_INSTALL} /packages/rga2/*.deb
