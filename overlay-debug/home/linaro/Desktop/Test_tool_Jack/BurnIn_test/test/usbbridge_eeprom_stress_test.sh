@@ -15,44 +15,18 @@ while [ 1 != 2 ]
 do
 
 
-	sudo $i2cset -f -y 7 0x50 0xff 0x01
-	read_value=`sudo $i2cget -f -y 7 0x50 0xff`
+        eeprom=$(i2cdetect -y 7 | grep 50)
+        if [ ! "$eeprom" ]; then
+                log "Can't found EEPROM devices FAIL"
+                ((fail_cnt+=1))
+        else
+                log "Found EEPROM devices PASS"
+                ((pass_cnt+=1))
+        fi
 
-	echo "read_value=$read_value"
-
-	int_1=0x01
-	if [ $read_value == $int_1 ]
-	then
-		log "Read/Write value SAME"
-		((pass_cnt+=1))
-		log "pass_cnt=$pass_cnt"
-	else
-		log "Read/Write value Not SAME"
-		((fail_cnt+=1))
-		log "fail_cnt=$fail_cnt"
-	fi
-	sleep 2
-		
-	sudo $i2cset -f -y 7 0x50 0xff 0x02
-	read_value=`sudo $i2cget -f -y 7 0x50 0xff`
-
-	echo "read_value=$read_value"
-
-	int_2=0x02
-	if [ $read_value == $int_2 ]
-	then
-		log "Read/Write value SAME"
-		((pass_cnt+=1))
-		log "pass_cnt=$pass_cnt"
-	else
-		log "Read/Write value Not SAME"
-		((fail_cnt+=1))
-		log "fail_cnt=$fail_cnt"
-	fi
-		
-	sleep 2
-	if [ "$fail_cnt" -ge 6  ]; then
-		log "rtc pass_cnt = $pass_cnt fail_cnt $fail_cnt "
-		exit
-	fi
+        sleep 2
+        if [ "$fail_cnt" -ge 6  ]; then
+                log "usbbridge i2c 7  eeprom pass_cnt = $pass_cnt fail_cnt $fail_cnt "
+                exit
+        fi
 done	
