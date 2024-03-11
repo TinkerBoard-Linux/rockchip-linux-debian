@@ -40,12 +40,12 @@ function gpio_selftest() {
   local ToStatusH=$(cat "/sys/class/gpio/gpio${input_pin}/value")
 
   # Print status information and check for successful test
-  echo "IN=PIN#${input_pin}, OUT=PIN#${output_pin}"
+#  echo "IN=PIN#${input_pin}, OUT=PIN#${output_pin}"
   #echo "FromStatusL=${FromStatusL} ToStatusL=${ToStatusL} FromStatusH=${FromStatusH} ToStatusH=${ToStatusH}"
   if [[ $FromStatusL -eq 0 && $ToStatusL -eq 0 && $FromStatusH -eq 1 && $ToStatusH -eq 1 ]]; then
-    echo "PASS"
+#    echo "PASS"
+    result="PASS"
   else
-    echo "FAIL"
     result="FAIL"
   fi
 }
@@ -57,15 +57,20 @@ for ((i = 0; i < ${#gpio_a[@]}; i++)); do
 
   gpio_selftest "$i" "${gpio_a[$i]}" "${gpio_b[$i]}"
   if [ "$result" == "FAIL" ]; then
+    echo "FAIL, ${gpio_a[$i]} to ${gpio_b[$i]}"
     break
   fi
 
   gpio_selftest "$i" "${gpio_b[$i]}" "${gpio_a[$i]}"
   if [ "$result" == "FAIL" ]; then
+    echo "FAIL, ${gpio_b[$i]} to ${gpio_a[$i]}"
     break
   fi
 done
 
 # Print final test result
-echo "Overall test result: $result"
+
+if [ "$result" == "PASS" ]; then
+  echo "$result"
+fi
 
