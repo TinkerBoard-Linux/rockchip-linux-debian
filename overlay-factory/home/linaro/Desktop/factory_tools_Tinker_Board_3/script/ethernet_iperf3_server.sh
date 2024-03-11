@@ -9,7 +9,7 @@ function Ethernet_Iperf3_Server()
 	LAN_PORT="$1"
 
 	killall iperf3
-	skeep 0.5
+	sleep 0.5
 
 	if [[ $LAN_PORT == "eth0" ]]; then
 		echo "Ethernet : iperf3 server ($LAN_PORT)"

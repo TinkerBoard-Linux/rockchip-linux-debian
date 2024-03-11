@@ -7,13 +7,13 @@ eth1_ping_ip="192.168.99.101"
 function Check_Network_Status()
 {
 	echo "Check Network Status: $1: $2"
-	for i in {1..16}
+	for i in {1..6}
 	do
 		ret=`sudo ping -c 1 -I $1 $2`
 		if [[ $ret == *" 0% packet loss"* ]]; then
 			echo "Check Pass"
 			return 0
-		elif [[ $i == 16 ]]; then
+		elif [[ $i == 6 ]]; then
 			echo "Network Status Error, Please Check IP Status"
 			exit 0
 		fi
