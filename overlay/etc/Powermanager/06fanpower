@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Log some extra information at the beginning of a suspend/resume cycle.
+
+echo "!!! fan power $1 $2 !!!" > /dev/kmsg
+
+if [ ! -d /sys/class/gpio/gpio123/ ]; then
+    echo "export gpio123 !!!" > /dev/kmsg
+    echo "123" > /sys/class/gpio/export
+    echo "out" > /sys/class/gpio/gpio123/direction
+else
+    echo "out" > /sys/class/gpio/gpio123/direction
+fi
+
+case "$1-$2" in
+        pre-hibernate|pre-suspend)
+            echo "turn off fan power " > /dev/kmsg
+            echo "0" > /sys/class/gpio/gpio123/value
+            ;;
+        post-hibernate|post-suspend)
+            echo "turn on fan power " > /dev/kmsg
+            echo "1" > /sys/class/gpio/gpio123/value
+            ;;
+       *) exit $NA
+               ;;
+esac

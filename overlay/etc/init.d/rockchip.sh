@@ -198,6 +198,12 @@ then
     mv /etc/Powermanager/04wifibt /lib/systemd/system-sleep/
     #mv /etc/Powermanager/triggerhappy /etc/init.d/triggerhappy
 
+    if [[ "$CHIPNAME" == "rk3566" ]];
+    then
+        mv /etc/Powermanager/05fanpower /usr/lib/pm-utils/sleep.d/
+        mv /etc/Powermanager/06fanpower /lib/systemd/system-sleep/
+    fi
+
     rm /etc/Powermanager -rf
     #service triggerhappy restart
 fi
