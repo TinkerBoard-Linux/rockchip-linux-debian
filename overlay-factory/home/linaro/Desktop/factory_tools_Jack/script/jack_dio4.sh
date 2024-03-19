@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DIOIN=508
-DIOOUTPUT=483
+DIOOUTPUT=486
 POWER=492
 
 function gpio {

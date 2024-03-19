@@ -1,6 +1,7 @@
 #!/bin/bash
 
-DIOIN=485
+DIOIN=468
+DIOOUTPUT=474
 
 function gpio {
     GPIO=$1
@@ -37,9 +38,24 @@ function gpio {
 gpio $DIOIN acquire
 gpio $DIOIN input
     
-result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
+gpio $DIOOUTPUT acquire
+gpio $DIOOUTPUT output
 
-echo "$result"
+gpio $DIOOUTPUT high
+result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
+if [ "$result" == "0" ]; then
+        echo "FAIL"
+        exit
+fi
+
+gpio $DIOOUTPUT low
+result=$(cat /sys/class/gpio/gpio${DIOIN}/value)
+if [ "$result" == "1" ]; then
+        echo "FAIL"
+        exit
+fi
+
+echo "PASS"
 
 
 
