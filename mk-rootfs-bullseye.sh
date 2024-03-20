@@ -43,6 +43,11 @@ sudo cp -rpf packages/$ARCH/* $TARGET_ROOTFS_DIR/packages
 
 # overlay folder
 sudo cp -rpf overlay/* $TARGET_ROOTFS_DIR/
+if [ "$VERSION" == "sdflash" ]; then
+	sudo mv $TARGET_ROOTFS_DIR/etc/init.d/sdflash-rockchip.sh $TARGET_ROOTFS_DIR/etc/init.d/rockchip.sh
+else
+	sudo rm -f $TARGET_ROOTFS_DIR/etc/init.d/sdflash-rockchip.sh
+fi
 
 # overlay-firmware folder
 sudo cp -rpf overlay-firmware/* $TARGET_ROOTFS_DIR/
@@ -355,6 +360,22 @@ cd /usr/local/share/ASUS_GPIO
 python3 setup.py install
 cd /
 
+if [ "$VERSION" == "sdflash" ]; then
+#---------------Set CLI Mode--------------
+	rm -rf /etc/systemd/system/default.target
+	ln -s /lib/systemd/system/multi-user.target /etc/systemd/system/default.target
+
+	echo "sudo tinker-upgrade" >> /home/linaro/.bashrc
+
+#-------Install necessary kit for tinker-upgrade-------
+	\${APT_INSTALL} pv
+	apt-get autoclean
+	apt-get clean
+	apt-get -y autoremove
+	apt-mark unhold xserver-common
+	\${APT_INSTALL} xvfb
+	echo y | pip3 install pyppeteer
+fi
 
 #------remk-rootfs-bullseye.shmove unused packages------------
 apt remove --purge -fy linux-firmware*

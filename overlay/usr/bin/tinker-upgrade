@@ -1,0 +1,348 @@
+#!/bin/bash
+
+INTERACTIVE=True
+ASK_TO_POWEROFF=0
+
+URL="https://tinker-board.asus.com/tw/download-list.html?product=tinker-board-3n"
+TMP_PATH="/home/linaro"
+WEB_CRAWLER="/usr/local/bin/search_server_list.py"
+BUILDVERSION="sdflash"
+
+TOOL_VERSION="3.0.0"
+TOOL_NAME="ASUS Tinker Board series OS downloading and installation software"
+
+#
+# Other functions
+#
+
+calc_wt_size() {
+  # NOTE: it's tempting to redirect stderr to /dev/null, so supress error
+  # output from tput. However in this case, tput detects neither stdout or
+  # stderr is a tty and so only gives default 80, 24 values
+  WT_HEIGHT=20
+  WT_WIDTH=$(tput cols)
+
+  if [ -z "$WT_WIDTH" ] || [ "$WT_WIDTH" -lt 60 ]; then
+    WT_WIDTH=80
+  fi
+  if [ "$WT_WIDTH" -gt 178 ]; then
+    WT_WIDTH=120
+  fi
+  WT_MENU_HEIGHT=$(($WT_HEIGHT-10))
+}
+
+do_finish() {
+  if [ $ASK_TO_POWEROFF -eq 1 ]; then
+    whiptail --yesno "$INSTALLED_OS has been installed to eMMC. To boot up the device with the newly installed OS image release, you have to power off the device, remove the SD card, and then power on the device again.
+
+Do you want to power off the device right now?" 20 60 2
+    if [ $? -eq 0 ]; then # yes
+      sync
+      shutdown -h now
+    else
+      return 0
+    fi
+  fi
+
+  if [ $EMMC -eq 0 ]; then
+    whiptail --msgbox "Welcome to ASUS Tinker Board series OS downloading and installation software.
+
+You can download the compatible OS image releases on the server and install them to your boards directly.
+
+However, there is no eMMC found on this board. You can only download the OS images.
+
+" $WT_HEIGHT $WT_WIDTH 1
+  else
+    whiptail --msgbox "Welcome to ASUS Tinker Board series OS downloading and installation software.
+
+You can download the compatible OS image releases on the server and install them to your boards directly.
+
+" $WT_HEIGHT $WT_WIDTH 1
+  fi
+  return 0
+}
+
+do_about() {
+  whiptail --msgbox "\
+Asus Tinker Board Software Configuration Tool v$TOOL_VERSION \n\nThis tool provides a straight-forward way of doing initial configuration of the Asus Tinker Board. Although it can be run at any time, some of the options may have difficulties if you have heavily customised your installation.\
+  " 20 70 1
+}
+
+do_nmtui() {
+  nmtui
+}
+
+download_server_zip() {
+  name=$(basename $1 .zip)
+  rm -f $TMP_PATH/$name*
+  wget $2 -O $TMP_PATH/$1 2>&1 | \
+  stdbuf -o0 awk '/[.] +[0-9][0-9]?[0-9]?%/ { pos = index($0, "%"); if (pos == 66) { print substr($0, 63, 3) } else if (pos == 67) { print substr($0, 64, 3) } }' | \
+  whiptail --gauge "Downloading $1... " 20 60 0
+
+  echo "100" | whiptail --gauge "Verifying $1... " 20 60 0
+  check=$(sha256sum $TMP_PATH/$1 | awk '{print $1}')
+
+  if [ "$3" = "$check" ]; then
+    (pv -i 0.2 -n $TMP_PATH/$1 | gzip -d -c > $TMP_PATH/$name.img) 2>&1 \
+    | whiptail --gauge "Decompressing $1... " 20 60 0
+  else
+    whiptail --msgbox "$1 is downloaded unsuccessfully!" 20 60
+    return 0
+  fi
+
+  if [ $EMMC -eq 0 ]; then
+    whiptail --msgbox "$1 is downloaded and decompressed successfully!" 20 60
+    return 0
+  elif whiptail --yesno "$1 is downloaded and decompressed successfully. Please confirm to install it to eMMC." 20 60; then
+    (pv -i 0.5 -n $TMP_PATH/$name.img | dd of=/dev/mmcblk0) 2>&1 \
+    | whiptail --gauge "Installing $name to eMMC..." 20 60 0
+
+    rm -f $TMP_PATH/$1
+    whiptail --yesno "$name is installed to eMMC successfully. To boot up the device with the newly installed OS image release, you have to power off the device, remove the SD card, and then power on the device again.
+
+Do you want to power off the device right now?" 20 60 2
+    if [ $? -eq 0 ]; then # yes
+      sync
+      shutdown -h now
+    else
+      INSTALLED_OS=$name
+      ASK_TO_POWEROFF=1
+      return 0
+    fi
+  else
+    rm -f $TMP_PATH/$1
+    return 0
+  fi
+}
+
+search_server_list() {
+  rm -f $TMP_PATH/.server_list.txt
+  echo "100" | whiptail --gauge "Waiting for searching release image ... " 20 60 0
+  rm -f /tmp/.X1-lock
+  pkill Xvfb
+  DISPLAY=:1
+  Xvfb :1 -screen 0 1024x768x16 & python3 $WEB_CRAWLER 2>/dev/null && pkill Xvfb
+
+  [ -f "$TMP_PATH/.server_list.txt" ] || { zip_option=(); return 0; }
+
+  link_list=$(cat $TMP_PATH/.server_list.txt | awk -F'href="' '/dlcdnets\.asus\.com\/pub\/ASUS\/Embedded_IPC/ && /Tinker_Board_3N-/ {print $2}' | awk -F'"' '{print $1}')
+  zip_list=$(cat $TMP_PATH/.server_list.txt | grep "Tinker_Board_3N" | sed -n 's/.*\(Tinker_Board_3N-.*\.zip\).*/\1/p')
+  sha256_list=$(cat $TMP_PATH/.server_list.txt | grep SHA256 | grep "Open-Source Code" | awk -F 'SHA256: ' '{print $2}' | awk '{print $1}')
+  IFS=$'\n' read -rd '' -a links <<< "$link_list"
+  IFS=$'\n' read -rd '' -a zips <<< "$zip_list"
+  IFS=$'\n' read -rd '' -a sha256s <<< "$sha256_list"
+
+  bypass=
+  prefix="link"
+  count=0
+  for link in "${links[@]}"; do
+    if [[ $link == *$BUILDVERSION* ]]; then
+      bypass=$count
+    else
+      ((count++))
+      var_name="${prefix}_$count"
+      declare -g "$var_name=$link"
+    fi
+  done
+
+  prefix="zip"
+  countall=0
+  count=0
+  zip_option=()
+  for zip in "${zips[@]}"; do
+    if [ -n "$bypass" ] && [ "$countall" -eq "$bypass" ]; then
+      ((countall++))
+    else
+      ((countall++))
+      ((count++))
+      zip_option+=("$count $zip" "")
+      var_name="${prefix}_$count"
+      declare -g "$var_name=$zip"
+    fi
+  done
+
+  prefix="sha256"
+  countall=0
+  count=0
+  for sha256 in "${sha256s[@]}"; do
+    if [ -n "$bypass" ] && [ "$countall" -eq "$bypass" ]; then
+      ((countall++))
+    else
+      ((countall++))
+      ((count++))
+      var_name="${prefix}_$count"
+      declare -g "$var_name=$sha256"
+    fi
+  done
+}
+
+search_local_list() {
+  list=$(ls $TMP_PATH | grep "Tinker_Board" | grep "img")
+  IFS=$'\n' read -rd '' -a files <<< "$list"
+  prefix="localimage"
+  count=0
+  image_option=()
+
+  for file in "${files[@]}"; do
+    ((count++))
+    image_option+=("$count $file" "")
+    var_name="${prefix}_$count"
+    declare -g "$var_name=$file"
+  done
+}
+
+install_local_image() {
+  (pv -i 0.5 -n $TMP_PATH/$1 | dd of=/dev/mmcblk0) 2>&1 \
+  | whiptail --gauge "Installing $2 to eMMC..." 20 60 0
+
+  whiptail --yesno "$2 is installed to eMMC successfully. To boot up the device with the newly installed OS image release, you have to power off the device, remove the SD card, and then power on the device again.
+
+Do you want to power off the device right now?" 20 60 2
+  if [ $? -eq 0 ]; then # yes
+    sync
+    shutdown -h now
+  else
+    INSTALLED_OS=$2
+    ASK_TO_POWEROFF=1
+    return 0
+  fi
+}
+
+do_server_menu() {
+  if curl --head --silent --fail "$URL" > /dev/null; then
+    search_server_list
+    FUN=$(whiptail --title "$TOOL_NAME" --menu "Please select the compatible OS image release to download." \
+      $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT \
+      --cancel-button Back --ok-button Select "${zip_option[@]}" 3>&1 1>&2 2>&3)
+
+    RET=$?
+    if [ $RET -eq 1 ]; then
+      return 0
+    elif [ $RET -eq 0 ]; then
+      FUNNUM=$(echo $FUN | cut -d' ' -f1)
+      imagezip="zip_$FUNNUM"
+      imagelink="link_$FUNNUM"
+      imagelink_encoded=$(echo "${!imagelink}" | sed 's/ /%20/g')
+      imagesha256="sha256_$FUNNUM"
+
+      if whiptail --yesno "Please confirm to download ${!imagezip}" 10 40; then
+        download_server_zip ${!imagezip} $imagelink_encoded ${!imagesha256}
+      else
+        return 0
+      fi
+    else
+      whiptail --msgbox "Failed to get the result from the server. Please check the network connection and try again." 20 60
+      return 0
+    fi
+  else
+    whiptail --msgbox "Failed to get the result from the server. Please check the network connection and try again." 20 60
+    return 0
+  fi
+}
+
+do_local_menu() {
+  search_local_list
+
+  if [ $count -eq 0 ]; then
+    whiptail --msgbox "There is no downnloaded OS image." 20 60
+  else
+    FUN=$(whiptail --title "$TOOL_NAME" --menu "Please select the compatible OS image release to install." \
+      $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT \
+      --cancel-button Back --ok-button Select "${image_option[@]}" 3>&1 1>&2 2>&3)
+
+    RET=$?
+    if [ $RET -eq 1 ]; then
+      return 0
+    elif [ $RET -eq 0 ]; then
+      FUNNUM=$(echo $FUN | cut -d' ' -f1)
+      imageimg="localimage_$FUNNUM"
+      image=$(basename "${!imageimg}" .img)
+
+      if [ $EMMC -eq 0 ]; then
+        whiptail --msgbox "There is no eMMC found on this board." 20 60
+        return 0
+      elif whiptail --yesno "Please confirm to install ${!imageimg} to eMMC." 10 40; then
+        install_local_image ${!imageimg} $image
+      else
+        return 0
+      fi
+    else
+      whiptail --msgbox "There is no downnloaded OS image." 20 60
+    fi
+  fi
+}
+
+#
+# Main function
+#
+
+# Everything else needs to be run as root
+if [ $(id -u) -ne 0 ]; then
+  printf "Script must be run as root. Try 'sudo tinker-upgrade'\n"
+  exit 1
+fi
+
+#
+# Interactive use loop
+#
+if [ "$INTERACTIVE" = True ]; then
+  calc_wt_size
+
+  lsblk | grep mmcblk0p8 | grep /
+  if [ $? -eq 0 ]; then # eMMC boot
+    whiptail --yesno "Welcome to ASUS Tinker Board series OS downloading and installation software.
+
+You can download the compatible OS image releases on the server and install them to your boards directly.
+
+However, you can only use the software when booting up from the SD card. Do you want to power off the board right now?
+
+" $WT_HEIGHT $WT_WIDTH 1
+    if [ $? -eq 0 ]; then # yes
+      sync
+      shutdown -h now
+    else
+      exit 0
+    fi
+  fi
+
+  lsblk | grep mmcblk0
+  if [ $? -eq 1 ]; then # no eMMC
+    whiptail --msgbox "Welcome to ASUS Tinker Board series OS downloading and installation software.
+
+You can download the compatible OS image releases on the server and install them to your boards directly.
+
+However, there is no eMMC found on this board. You can only download the OS images.
+
+" $WT_HEIGHT $WT_WIDTH 1
+    EMMC=0
+  else
+    whiptail --msgbox "Welcome to ASUS Tinker Board series OS downloading and installation software.
+
+You can download the compatible OS image releases on the server and install them to your boards directly.
+
+" $WT_HEIGHT $WT_WIDTH 1
+    EMMC=1
+  fi
+
+  while true; do
+    FUN=$(whiptail --title "$TOOL_NAME" --menu "" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Exit --ok-button Select \
+      "1 Network Manager (Configure the network connection)" ""  \
+      "2 List the ASUS Tinker Board series compatible OS image releases" "" \
+      "3 List the downloaded OS image" "" \
+      3>&1 1>&2 2>&3)
+    RET=$?
+    if [ $RET -eq 1 ]; then
+      do_finish
+    elif [ $RET -eq 0 ]; then
+      case "$FUN" in
+        1\ *) do_nmtui ;;
+        2\ *) do_server_menu ;;
+        3\ *) do_local_menu ;;
+        4\ *) do_about ;;
+        *) whiptail --msgbox "Programmer error: unrecognized option" 20 60 1 ;;
+      esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+    else
+      exit 1
+    fi
+  done
+fi
