@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TOUCH_INPUT_EVENT=/dev/input/event2
+TOUCH_INPUT_EVENT=/dev/input/event1
 
 if [ ! -e ${HID_INPUT_EVENT} ]; then
 	echo "FAIL"
