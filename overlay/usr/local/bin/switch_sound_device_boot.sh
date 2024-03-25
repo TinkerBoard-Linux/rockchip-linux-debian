@@ -6,12 +6,15 @@ jack_tb3_status=$(cat /sys/class/extcon/extcon3/cable.1/state)
 
 if [ $hdmi_status = "connected" ];
 then
-	if [ $jack_tb3n_status = 0 ] || [ $jack_tb3_status = 0 ];
+	if [ $jack_tb3n_status = 1 ] || [ $jack_tb3_status = 1 ];
 	then
+		echo "Audio jack is connected, set default sound card to RK809"
+		/bin/bash  /etc/pulse/switch_sound_device.sh "alsa_output.platform-rk809-sound.HiFi__hw_rockchiprk809__sink"
+	else
 		echo "HDMI is connected, set default sound card to HDMI"
 		/bin/bash /etc/pulse/switch_sound_device.sh "alsa_output.platform-hdmi-sound.stereo-fallback"
 	fi
 else
-	echo "audio jack is connected, set default sound card to RK809"
+	echo "HDMI is disconnected, set default sound card to RK809"
 	/bin/bash  /etc/pulse/switch_sound_device.sh "alsa_output.platform-rk809-sound.HiFi__hw_rockchiprk809__sink"
 fi

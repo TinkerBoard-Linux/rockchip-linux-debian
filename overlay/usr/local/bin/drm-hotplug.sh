@@ -133,8 +133,11 @@ fi
 # Config audio output devices when HDMI hot-plug
 if [ $hdmi_status = "connected" ];
 then
-	if [ $jack_tb3n_status = 0 ] || [ $jack_tb3_status = 0 ];
+	if [ $jack_tb3n_status = 1 ] || [ $jack_tb3_status = 1 ];
 	then
+		echo "Plug-in HDMI, but audio jack is connected, set default sound card to RK809"
+		/bin/bash  /etc/pulse/switch_sound_device.sh "alsa_output.platform-rk809-sound.HiFi__hw_rockchiprk809__sink"
+	else
 		echo "Plug-in HDMI, set default sound card to HDMI"
 		/etc/pulse/switch_sound_device.sh "alsa_output.platform-hdmi-sound.stereo-fallback"
 	fi
