@@ -3,12 +3,11 @@
 INTERACTIVE=True
 ASK_TO_POWEROFF=0
 
-URL="https://tinker-board.asus.com/tw/download-list.html?product=tinker-board-3n"
+URL="https://raw.githubusercontent.com/TinkerBoard/tinkerboard.github.io/main/static/tinker_os-releases.json"
 TMP_PATH="/home/linaro"
-WEB_CRAWLER="/usr/local/bin/search_server_list.py"
 BUILDVERSION="sdflash"
 
-TOOL_VERSION="3.0.0"
+TOOL_VERSION="3.0.1"
 TOOL_NAME="ASUS Tinker Board series OS downloading and installation software"
 
 #
@@ -116,18 +115,16 @@ Do you want to power off the device right now?" 20 60 2
 }
 
 search_server_list() {
-  rm -f $TMP_PATH/.server_list.txt
-  echo "100" | whiptail --gauge "Waiting for searching release image ... " 20 60 0
-  rm -f /tmp/.X1-lock
-  pkill Xvfb
-  DISPLAY=:1
-  Xvfb :1 -screen 0 1024x768x16 & python3 $WEB_CRAWLER 2>/dev/null && pkill Xvfb
+  rm -f $TMP_PATH/tinker_os-releases.json
+  wget $URL -O $TMP_PATH/tinker_os-releases.json 2>&1 | \
+  stdbuf -o0 awk '/[.] +[0-9][0-9]?[0-9]?%/ { pos = index($0, "%"); if (pos == 66) { print substr($0, 63, 3) } else if (pos == 67) { print substr($0, 64, 3) } }' | \
+  whiptail --gauge "Waiting for searching release image ... " 20 60 0
 
-  [ -f "$TMP_PATH/.server_list.txt" ] || { zip_option=(); return 0; }
+  [ -f "$TMP_PATH/tinker_os-releases.json" ] || { zip_option=(); return 0; }
 
-  link_list=$(cat $TMP_PATH/.server_list.txt | awk -F'href="' '/dlcdnets\.asus\.com\/pub\/ASUS\/Embedded_IPC/ && /Tinker_Board_3N-/ {print $2}' | awk -F'"' '{print $1}')
-  zip_list=$(cat $TMP_PATH/.server_list.txt | grep "Tinker_Board_3N" | sed -n 's/.*\(Tinker_Board_3N-.*\.zip\).*/\1/p')
-  sha256_list=$(cat $TMP_PATH/.server_list.txt | grep SHA256 | grep "Open-Source Code" | awk -F 'SHA256: ' '{print $2}' | awk '{print $1}')
+  link_list=$(jq -r '.["Tinker OS Releases"]["Tinker Board 3N"] | .[] | .[].url' $TMP_PATH/tinker_os-releases.json)
+  zip_list=$(jq -r '.["Tinker OS Releases"]["Tinker Board 3N"] | .[] | .[].fileName' $TMP_PATH/tinker_os-releases.json)
+  sha256_list=$(jq -r '.["Tinker OS Releases"]["Tinker Board 3N"] | .[] | .[].sha256' $TMP_PATH/tinker_os-releases.json)
   IFS=$'\n' read -rd '' -a links <<< "$link_list"
   IFS=$'\n' read -rd '' -a zips <<< "$zip_list"
   IFS=$'\n' read -rd '' -a sha256s <<< "$sha256_list"
@@ -209,29 +206,24 @@ Do you want to power off the device right now?" 20 60 2
 }
 
 do_server_menu() {
-  if curl --head --silent --fail "$URL" > /dev/null; then
-    search_server_list
-    FUN=$(whiptail --title "$TOOL_NAME" --menu "Please select the compatible OS image release to download." \
-      $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT \
-      --cancel-button Back --ok-button Select "${zip_option[@]}" 3>&1 1>&2 2>&3)
+  search_server_list
+  FUN=$(whiptail --title "$TOOL_NAME" --menu "Please select the compatible OS image release to download." \
+    $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT \
+    --cancel-button Back --ok-button Select "${zip_option[@]}" 3>&1 1>&2 2>&3)
 
-    RET=$?
-    if [ $RET -eq 1 ]; then
-      return 0
-    elif [ $RET -eq 0 ]; then
-      FUNNUM=$(echo $FUN | cut -d' ' -f1)
-      imagezip="zip_$FUNNUM"
-      imagelink="link_$FUNNUM"
-      imagelink_encoded=$(echo "${!imagelink}" | sed 's/ /%20/g')
-      imagesha256="sha256_$FUNNUM"
+  RET=$?
+  if [ $RET -eq 1 ]; then
+    return 0
+  elif [ $RET -eq 0 ]; then
+    FUNNUM=$(echo $FUN | cut -d' ' -f1)
+    imagezip="zip_$FUNNUM"
+    imagelink="link_$FUNNUM"
+    imagelink_encoded=$(echo "${!imagelink}" | sed 's/ /%20/g')
+    imagesha256="sha256_$FUNNUM"
 
-      if whiptail --yesno "Please confirm to download ${!imagezip}" 10 40; then
-        download_server_zip ${!imagezip} $imagelink_encoded ${!imagesha256}
-      else
-        return 0
-      fi
+    if whiptail --yesno "Please confirm to download ${!imagezip}" 10 40; then
+      download_server_zip ${!imagezip} $imagelink_encoded ${!imagesha256}
     else
-      whiptail --msgbox "Failed to get the result from the server. Please check the network connection and try again." 20 60
       return 0
     fi
   else

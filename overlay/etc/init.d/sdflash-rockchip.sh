@@ -126,7 +126,7 @@ then
     echo "The rootfs will be configured."
 
     # Force rootfs synced
-    mount -o remount,sync /
+    #mount -o remount,sync /
 
     install_packages ${CHIPNAME}
 

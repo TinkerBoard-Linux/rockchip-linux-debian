@@ -369,11 +369,7 @@ if [ "$VERSION" == "sdflash" ]; then
 
 #-------Install necessary kit for tinker-upgrade-------
 	\${APT_INSTALL} pv
-	apt-get autoclean
-	apt-get clean
-	apt-get -y autoremove
-	apt-mark unhold xserver-common
-	\${APT_INSTALL} xvfb
+	\${APT_INSTALL} jq
 	echo y | pip3 install pyppeteer
 fi
 
