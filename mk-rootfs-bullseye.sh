@@ -159,6 +159,7 @@ echo -e "\033[36m Install camera.................... \033[0m"
 \${APT_INSTALL} cheese v4l-utils
 \${APT_INSTALL} /packages/libv4l/*.deb
 \${APT_INSTALL} /packages/cheese/*.deb
+\${APT_INSTALL} /packages/rkaiq/camera_engine_rkaiq_rk3568_arm64.deb
 
 #---------Network----------
 apt-get install -y ethtool
@@ -274,8 +275,6 @@ cp /etc/ASUS/thunar-volman.xml /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar-
 #sed -i "/exit 0/i \ echo 3 > /sys/class/graphics/fb0/blank" /etc/rc.local
 
 cp /packages/libmali/libmali-*-x11*.deb /
-cp -rf /packages/rkisp/*.deb /
-cp -rf /packages/rkaiq/*.deb /
 #cp -rf /usr/lib/firmware/rockchip/ /
 
 # reduce 500M size for rootfs
