@@ -18,7 +18,7 @@ sleep 1
 echo on > /sys/kernel/debug/usb/ehci/fd800000.usb/hub_vbus
 echo on > /sys/kernel/debug/usb/fd000000.dwc3/hub_vbus
 
-sleep 1
+sleep 3
 
 cardCount=$(lsusb|grep "iCreate Technologies"|wc -l)
 if [ "$cardCount" != "$u2port" ]; then
