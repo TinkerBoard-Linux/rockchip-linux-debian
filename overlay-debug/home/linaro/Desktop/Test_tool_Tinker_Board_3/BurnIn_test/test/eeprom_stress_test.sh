@@ -14,26 +14,26 @@ log()
 enable_eeprom_write()
 {
 	log "enable_eeprom_write"
-	sudo su -c "echo "42" > /sys/class/gpio/unexport"
+	sudo su -c "echo "113" > /sys/class/gpio/unexport"
 	sleep 0.2
-	sudo su -c "echo "42" > /sys/class/gpio/export"
+	sudo su -c "echo "113" > /sys/class/gpio/export"
 	sleep 0.2
-	sudo su -c "echo "out" > /sys/class/gpio/gpio42/direction"
-	sudo su -c "echo "0" > /sys/class/gpio/gpio42/value"
+	sudo su -c "echo "out" > /sys/class/gpio/gpio113/direction"
+	sudo su -c "echo "0" > /sys/class/gpio/gpio113/value"
 	sleep 0.1
 }
 
 disable_eeprom_write()
 {
 	log "disable_eeprom_write"
-	sudo su -c "echo "42" > /sys/class/gpio/unexport"
+	sudo su -c "echo "113" > /sys/class/gpio/unexport"
 	sleep 0.2
-	sudo su -c "echo "42" > /sys/class/gpio/export"
+	sudo su -c "echo "113" > /sys/class/gpio/export"
 	sleep 0.2
-	sudo su -c "echo "out" > /sys/class/gpio/gpio42/direction"
-	sudo su -c "echo "1" > /sys/class/gpio/gpio42/value"
+	sudo su -c "echo "out" > /sys/class/gpio/gpio113/direction"
+	sudo su -c "echo "1" > /sys/class/gpio/gpio113/value"
 	sleep 0.1
-	sudo su -c "echo "42" > /sys/class/gpio/unexport"
+	sudo su -c "echo "113" > /sys/class/gpio/unexport"
 	sleep 0.2
 }
 
