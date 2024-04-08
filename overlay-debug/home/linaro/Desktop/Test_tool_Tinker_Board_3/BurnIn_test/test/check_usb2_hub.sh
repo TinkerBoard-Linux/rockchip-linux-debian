@@ -11,7 +11,7 @@ log()
 
 while [ 1 != 2 ]
 do
-	lsusb|grep "05e3:0610"
+	lsusb|grep -E "05e3:0608|05e3:0610"
 	if [ "$?" == "0" ]; then
 		log "Found Genesys Logic usb 2.0 hub."
 		((u2_pass_cnt+=1))
