@@ -17,14 +17,17 @@ SCRIPT=`realpath $0`
 SCRIPTPATH=`dirname $SCRIPT`
 info_view
 
+sudo echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+sudo echo performance > /sys/devices/platform/dmc/devfreq/dmc/governor
+
 echo "Start Write Test"
 sync
 echo 3 | sudo tee /proc/sys/vm/drop_caches
-sudo dd if=/dev/zero of=$test_path/tmpfile bs=256M count=15 conv=fdatasync
+sudo dd if=/dev/zero of=$test_path/tmpfile bs=256M count=4 conv=fdatasync
 
 echo "Start Read Test"
 sync
 echo 3 | sudo tee /proc/sys/vm/drop_caches
-sudo dd if=$test_path/tmpfile of=/dev/null bs=256M count=15
+sudo dd if=$test_path/tmpfile of=/dev/null bs=256M count=4
 sudo rm $test_path/tmpfile
 
