@@ -4,11 +4,11 @@ INTERACTIVE=True
 ASK_TO_POWEROFF=0
 
 URL="https://raw.githubusercontent.com/TinkerBoard/tinkerboard.github.io/main/static/tinker_os-releases.json"
-TMP_PATH="/home/linaro"
+TMP_PATH="/home"
 BUILDVERSION="sdflash"
 
-TOOL_VERSION="3.0.1"
-TOOL_NAME="ASUS Tinker Board series OS downloading and installation software"
+TOOL_VERSION="3.0.2"
+TOOL_NAME="ASUS Tinker Board series OS downloading and installation software v$TOOL_VERSION"
 
 #
 # Other functions
@@ -37,7 +37,7 @@ do_finish() {
 Do you want to power off the device right now?" 20 60 2
     if [ $? -eq 0 ]; then # yes
       sync
-      shutdown -h now
+      poweroff
     else
       return 0
     fi
@@ -79,11 +79,17 @@ download_server_zip() {
   whiptail --gauge "Downloading $1... " 20 60 0
 
   echo "100" | whiptail --gauge "Verifying $1... " 20 60 0
-  check=$(sha256sum $TMP_PATH/$1 | awk '{print $1}')
+  checkzip=$(sha256sum $TMP_PATH/$1 | awk '{print $1}')
 
-  if [ "$3" = "$check" ]; then
-    (pv -i 0.2 -n $TMP_PATH/$1 | gzip -d -c > $TMP_PATH/$name.img) 2>&1 \
+  if [ "$3" = "$checkzip" ]; then
+    IMG_SIZE=$(unzip -l $TMP_PATH/$1 | awk -v name="$name" '$NF ~ name".img" {print $1}')
+    (unzip -p $TMP_PATH/$1 | pv -i 1 -s $IMG_SIZE -n | dd of=$TMP_PATH/$name.img) 2>&1 \
     | whiptail --gauge "Decompressing $1... " 20 60 0
+    checkimg=$(ls -l $TMP_PATH/$name.img | awk '{print $5}')
+    if [ "$IMG_SIZE" != "$checkimg" ]; then
+      whiptail --msgbox "$1 is downloaded unsuccessfully!" 20 60
+      return 0
+    fi
   else
     whiptail --msgbox "$1 is downloaded unsuccessfully!" 20 60
     return 0
@@ -102,7 +108,7 @@ download_server_zip() {
 Do you want to power off the device right now?" 20 60 2
     if [ $? -eq 0 ]; then # yes
       sync
-      shutdown -h now
+      poweroff
     else
       INSTALLED_OS=$name
       ASK_TO_POWEROFF=1
@@ -121,10 +127,11 @@ search_server_list() {
   whiptail --gauge "Waiting for searching release image ... " 20 60 0
 
   [ -f "$TMP_PATH/tinker_os-releases.json" ] || { zip_option=(); return 0; }
+  [ -z "$boardinfo" ] && return 0
 
-  link_list=$(jq -r '.["Tinker OS Releases"]["Tinker Board 3N"] | .[] | .[].url' $TMP_PATH/tinker_os-releases.json)
-  zip_list=$(jq -r '.["Tinker OS Releases"]["Tinker Board 3N"] | .[] | .[].fileName' $TMP_PATH/tinker_os-releases.json)
-  sha256_list=$(jq -r '.["Tinker OS Releases"]["Tinker Board 3N"] | .[] | .[].sha256' $TMP_PATH/tinker_os-releases.json)
+  link_list=$(jq -r ".[\"Tinker OS Releases\"][\"$boardinfo\"] | .[] | .[].url" "$TMP_PATH/tinker_os-releases.json" 2>/dev/null)
+  zip_list=$(jq -r ".[\"Tinker OS Releases\"][\"$boardinfo\"] | .[] | .[].fileName" "$TMP_PATH/tinker_os-releases.json" 2>/dev/null)
+  sha256_list=$(jq -r ".[\"Tinker OS Releases\"][\"$boardinfo\"] | .[] | .[].sha256" "$TMP_PATH/tinker_os-releases.json" 2>/dev/null)
   IFS=$'\n' read -rd '' -a links <<< "$link_list"
   IFS=$'\n' read -rd '' -a zips <<< "$zip_list"
   IFS=$'\n' read -rd '' -a sha256s <<< "$sha256_list"
@@ -197,7 +204,7 @@ install_local_image() {
 Do you want to power off the device right now?" 20 60 2
   if [ $? -eq 0 ]; then # yes
     sync
-    shutdown -h now
+    poweroff
   else
     INSTALLED_OS=$2
     ASK_TO_POWEROFF=1
@@ -264,6 +271,20 @@ do_local_menu() {
   fi
 }
 
+setting_boardinfo() {
+  boardinfo=()
+  # Tinker Board (S) R2.0
+  grep -q "Tinker Board R2.0" /proc/boardinfo && boardinfo="Tinker Board S R2.0"
+  grep -q "Tinker Board S R2.0" /proc/boardinfo && boardinfo="Tinker Board S R2.0"
+  # Tinker Board 2S
+  grep -q "Tinker Board 2" /proc/boardinfo && boardinfo="Tinker Board 2/2S"
+  # Tinker Board 3
+  grep -q "Tinker Board 3" /proc/boardinfo && boardinfo="Tinker Board 3"
+  # Tinker Board 3N
+  grep -q "Tinker Board 3N" /proc/boardinfo && boardinfo="Tinker Board 3N"
+  grep -q "Sanden" /proc/boardinfo && boardinfo="Tinker Board 3N"
+}
+
 #
 # Main function
 #
@@ -291,7 +312,7 @@ However, you can only use the software when booting up from the SD card. Do you 
 " $WT_HEIGHT $WT_WIDTH 1
     if [ $? -eq 0 ]; then # yes
       sync
-      shutdown -h now
+      poweroff
     else
       exit 0
     fi
@@ -315,6 +336,8 @@ You can download the compatible OS image releases on the server and install them
 " $WT_HEIGHT $WT_WIDTH 1
     EMMC=1
   fi
+
+  setting_boardinfo
 
   while true; do
     FUN=$(whiptail --title "$TOOL_NAME" --menu "" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Exit --ok-button Select \
