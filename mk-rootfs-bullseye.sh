@@ -402,6 +402,9 @@ if [ "$VERSION" == "release" ]; then
         passwd --expire linaro
 fi
 
+#---------------Fix suspend resume can't enter login screen--------------
+\${APT_INSTALL} light-locker
+
 rm -rf /var/lib/apt/lists/*
 rm -rf /var/cache/
 rm -rf /packages/
