@@ -1,0 +1,2 @@
+KERNEL=="hwmon2", SUBSYSTEM=="hwmon", PROGRAM="/bin/sh -c 'chmod 666 /sys/devices/platform/gpio-fan/hwmon/hwmon2/fan_speed'"
+KERNEL=="hwmon2", SUBSYSTEM=="hwmon", PROGRAM="/bin/sh -c 'chmod 666 /sys/devices/platform/gpio-fan/hwmon/hwmon2/fan_power'"
