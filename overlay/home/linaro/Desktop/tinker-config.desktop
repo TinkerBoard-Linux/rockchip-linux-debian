@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Tinker Config
+Exec=sudo /usr/bin/tinker-config
+Icon=/usr/share/pixmaps/tinker_config.png
+Terminal=true
+Categories=Settings
