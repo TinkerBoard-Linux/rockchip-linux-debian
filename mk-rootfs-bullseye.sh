@@ -400,11 +400,10 @@ if [ "$VERSION" == "release" ]; then
         sed -i "s|^autologin-user=.*|#autologin-user=linaro|" /etc/lightdm/lightdm.conf
         sed -i "s|^autologin-user-timeout=.*|#autologin-user-timeout=0|" /etc/lightdm/lightdm.conf
         passwd --expire linaro
+	\${APT_INSTALL} light-locker
 fi
 
 #---------------Fix suspend resume can't enter login screen--------------
-\${APT_INSTALL} light-locker
-
 rm -rf /var/lib/apt/lists/*
 rm -rf /var/cache/
 rm -rf /packages/
