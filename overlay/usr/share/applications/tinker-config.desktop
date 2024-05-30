@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Name=Tinker Config
-Exec=sudo /usr/bin/tinker-config
+Exec=xfce4-terminal -e "sudo bash -c /usr/bin/tinker-config" --maximize
 Icon=/usr/share/pixmaps/tinker_config.png
 Terminal=true
 Categories=Settings

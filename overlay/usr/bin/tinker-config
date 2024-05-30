@@ -874,6 +874,10 @@ if [ $(id -u) -ne 0 ]; then
   exit 1
 fi
 
+# Wait a moment to get the correct windows size
+# when run terminal with the maximize size.
+sleep 0.2
+
 #
 # Interactive use loop
 #
