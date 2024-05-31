@@ -49,6 +49,15 @@ else
 	sudo rm -f $TARGET_ROOTFS_DIR/etc/init.d/sdflash-rockchip.sh
 fi
 
+# tinker-config
+if [ "$RK_PROJECT_NAME" == "Tinker_Board_3" ]; then
+    sudo mv $TARGET_ROOTFS_DIR/usr/bin/tinker-config-tb3 $TARGET_ROOTFS_DIR/usr/bin/tinker-config
+    sudo rm $TARGET_ROOTFS_DIR/usr/bin/tinker-config-tb3n
+else
+    sudo mv $TARGET_ROOTFS_DIR/usr/bin/tinker-config-tb3n $TARGET_ROOTFS_DIR/usr/bin/tinker-config
+    sudo rm $TARGET_ROOTFS_DIR/usr/bin/tinker-config-tb3
+fi
+
 # overlay-firmware folder
 sudo cp -rpf overlay-firmware/* $TARGET_ROOTFS_DIR/
 sudo mkdir -p $TARGET_ROOTFS_DIR/tmp_firmware
