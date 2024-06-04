@@ -31,6 +31,7 @@ show_usage() {
     echo "                     rssi_5g  [Band] [Channel]"
     echo "                     get_info"
     echo "                     test_qmi"
+    echo "                     set_vmin"
     exit 1
 }
 
@@ -93,6 +94,20 @@ rssi_5g)
         result=${sig0},${sig1},${sig2},${sig3}
     else
         show_usage
+    fi
+    ;;
+set_vmin)
+    send_at_command_directly 'AT+QCFG=\"usbenum/seoctl\"' > $ACK
+    res=`cat ${ACK} | tr -d '\r'`
+    res=`echo ${res##*\,}`
+    res=`echo ${res%%OK*}`
+    if [ "$res" == "0" ]; then
+        send_at_command_directly 'AT+QCFG=\"usbenum/seoctl\",1' > /dev/null
+        result="DONE"
+    elif [ "$res" == "1" ]; then
+        result="PASS"
+    else
+        result="FAIL"
     fi
     ;;
 *)
