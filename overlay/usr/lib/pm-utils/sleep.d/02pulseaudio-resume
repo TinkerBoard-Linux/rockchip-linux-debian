@@ -5,11 +5,25 @@
 . "${PM_FUNCTIONS}"
 
 case $1 in
+	suspend|hibernate)
+		for sink in $(pactl list short sinks | awk '{print $1}'); do
+			pactl suspend-sink $sink 1
+		done
+		for source in $(pactl list short sources | awk '{print $1}'); do
+			pactl suspend-source $source 1
+		done
+		;;
 	thaw|resume)
-		kill -9 $(pidof pulseaudio)
+		for sink in $(pactl list short sinks | awk '{print $1}'); do
+			pactl suspend-sink $sink 0
+		done
+		for source in $(pactl list short sources | awk '{print $1}'); do
+			pactl suspend-source $source 0
+		done
+		#kill -9 $(pidof pulseaudio)
 		systemctl restart switch-sound-device-boot.service
 		systemctl stop switch-sound-device-boot.service
-	;;
+		;;
 	*) exit $NA
 		;;
 esac
