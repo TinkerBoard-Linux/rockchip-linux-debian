@@ -147,6 +147,7 @@ chmod 755 /usr/lib/pm-utils/sleep.d/02pulseaudio-resume
 chmod 755 /etc/pulse/switch_sound_device.sh
 chmod 755 /etc/pulse/jack_hotplug.sh
 chmod 755 /usr/local/bin/switch_sound_device_boot.sh
+ln -s /usr/lib/systemd/system/switch-sound-device-boot.service /etc/systemd/system/multi-user.target.wants/switch-sound-device-boot.service
 
 #---------------ethernet---------------
 chmod 755 /etc/network/ethernet_wol.sh
