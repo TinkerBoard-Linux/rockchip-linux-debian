@@ -165,6 +165,8 @@ echo -e "\033[36m Install blueman.................... \033[0m"
 # For gpio wiring c library
 chmod a+x /usr/local/share/gpio_lib_c_rk3399
 cd /usr/local/share/gpio_lib_c_rk3399
+./build uninstall
+./build clean
 ./build
 # For gpio python library
 cd /usr/local/share/gpio_lib_python_rk3399/
