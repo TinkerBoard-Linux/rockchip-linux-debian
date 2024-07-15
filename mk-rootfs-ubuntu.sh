@@ -77,6 +77,10 @@ echo "  renderer: NetworkManager" >> /etc/netplan/01-network-manager-all.yaml
 # Remove packages which are not needed.
 apt autoremove -y
 
+if [ -e /etc/gdm3/custom.conf ]; then
+    sed -i 's/^\#WaylandEnable=false/WaylandEnable=false/' /etc/gdm3/custom.conf
+fi
+
 systemctl enable resize-helper.service
 systemctl enable mountboot.service
 
