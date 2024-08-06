@@ -350,6 +350,10 @@ apt-get install -y build-essential
 # -------Install for USB eject fail------
 apt-get install -y eject
 
+# -------Install for tinker-scheduler------
+\${APT_INSTALL} gettext
+\${APT_INSTALL} /packages/tinker-scheduler/*.deb
+
 #---------------ncurses library--------------
 apt-get update
 apt-get install -y libncurses-dev
