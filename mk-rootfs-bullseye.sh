@@ -306,6 +306,10 @@ sed -i "s|^autologin-user-timeout=.*|#autologin-user-timeout=0|" /etc/lightdm/li
 # Fix lock screen disappear
 \${APT_INSTALL} light-locker
 
+# -------Install for tinker-scheduler------
+\${APT_INSTALL} gettext
+\${APT_INSTALL} /packages/tinker-scheduler/*.deb
+
 #-------ASUS customization end-------
 systemctl enable rkisp_3A.service
 
