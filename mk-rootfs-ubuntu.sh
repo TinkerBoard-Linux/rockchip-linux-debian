@@ -16,6 +16,10 @@ case "${ARCH:-$1}" in
 		;;
 esac
 
+if [ ! -f ubuntu-base-arm64.tar.gz ]; then
+	wget -O ubuntu-base-arm64.tar.gz https://cdimage.ubuntu.com/ubuntu-base/releases/22.04.4/release/ubuntu-base-22.04.4-base-arm64.tar.gz
+fi
+
 echo -e "\033[36m Building for $ARCH \033[0m"
 
 if [ ! $VERSION ]; then
@@ -43,6 +47,8 @@ sudo cp -rf overlay-firmware/* $TARGET_ROOTFS_DIR/
 
 # ASUS: Change to copy all the kernel modules built from build.sh.
 sudo cp -rf lib_modules/lib/modules $TARGET_ROOTFS_DIR/lib/
+
+sudo cp -rf /etc/resolv.conf $TARGET_ROOTFS_DIR/etc/
 
 echo -e "\033[36m Change root.....................\033[0m"
 if [ "$ARCH" == "armhf" ]; then
@@ -87,6 +93,8 @@ apt clean
 #-------ASUS customization end-------
 
 EOF
+
+sudo cp -rf overlay-ubuntu/etc/resolv.conf $TARGET_ROOTFS_DIR/etc/resolv.conf
 
 sudo umount $TARGET_ROOTFS_DIR/dev/pts
 sudo umount $TARGET_ROOTFS_DIR/dev
