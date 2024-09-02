@@ -1,0 +1,14 @@
+[Unit]
+Description=ASUS Wi-Fi KeepAlive Service
+After=NetworkManager.service
+
+[Service]
+Type=simple
+ExecStart=-/etc/init.d/wifi_keepalive.sh start
+TimeoutSec=infinity
+User=root
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
