@@ -4,7 +4,7 @@ NumberOfEvents=$(ls /dev/input | grep -c event*)
 DevExist=0
 
 if [ "$1" == "" ]; then
-	DevName="fts_ts"
+	DevName="eGalaxTouch"
 else
 	DevName=$1
 fi
