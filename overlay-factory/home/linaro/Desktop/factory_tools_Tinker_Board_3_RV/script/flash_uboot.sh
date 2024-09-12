@@ -47,7 +47,7 @@ if [ "$#" == 1 ]; then
 		fi
 	elif [ "$1" == "emmc" ]; then
 		dev=/dev/mmcblk0
-		uboot_img=$(ls -1 $uboot_path/sdcard_uboot* 2>/dev/null)
+		uboot_img=$(ls -1 $uboot_path/sdcard_uboot*.img 2>/dev/null)
 
 		lsblk | grep mmcblk0
 		[ $? -eq 0 ] || { echo "No eMMC"; exit -1; }
