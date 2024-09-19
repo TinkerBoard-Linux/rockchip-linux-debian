@@ -32,7 +32,7 @@ if [ "$interface_wifi" != "" ]; then
     sleep 1
 
     GW=$(/sbin/route -n | grep "${interface_wifi}" | grep UG | awk '{printf $2}')
-    echo "GW=$GW"
+#    echo "GW=$GW"
     if [[ -n "$GW" ]]; then
         sudo ping $GW -w 100 -c 1 > /dev/null 2>&1
 	if [ ! $? -eq 0 ]; then
