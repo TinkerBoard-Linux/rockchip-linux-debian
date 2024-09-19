@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NumberOfEvents=$(ls /dev/input | grep -c event*)
+NumberOfEvents=$(ls /dev/input | grep -o "event[0-9]" | wc -l)
 DevExist=0
 
 if [ "$1" == "" ]; then
