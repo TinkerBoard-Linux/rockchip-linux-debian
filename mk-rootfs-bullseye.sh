@@ -325,6 +325,8 @@ systemctl enable mountboot.service
 if [ "$VERSION" == "factory" ]; then
 	cp /etc/Ethernet/static-eth.service  /usr/lib/systemd/system/static-eth.service
 	systemctl enable static-eth.service
+        pip3 install opencv-python
+        pip3 install opencv-contrib-python
 fi
 
 #-------ASUS customization end-------
