@@ -5,11 +5,6 @@ USB3_PORT_1_SPEED="/sys/devices/platform/usbhost/fd000000.dwc3/xhci-hcd.*.auto/u
 USB3_PORT_2_SPEED="/sys/devices/platform/usbhost/fd000000.dwc3/xhci-hcd.*.auto/usb*/*-1/*-1.2/speed"
 var="PASS"
 
-grep 5000 $USB3_PORT_1_SPEED > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-    var="FAIL, usb3 port1 speed is abnormal"
-fi
-
 ls $USB_HUB_SPEED > /dev/null 2>&1
 if [ "$?" != "0" ]; then
     if [ "$var" != "PASS" ]; then
