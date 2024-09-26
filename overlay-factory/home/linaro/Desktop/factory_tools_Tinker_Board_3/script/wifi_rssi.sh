@@ -12,12 +12,12 @@ if [ "$interface_wifi" != "" ]; then
     sudo nmcli connection delete $AP_NAME > /dev/null 2>&1
     sudo nmcli dev wifi rescan
     sleep 3
-    scan_ap=$(nmcli dev wifi | grep -w "${AP_NAME}" | awk '{print$1}')
+    scan_ap=$(nmcli dev wifi | grep -w "${AP_NAME} " | awk '{print$2}')
 
     if [ "$scan_ap" != "$AP_NAME" ]; then
         sleep 15
         sudo nmcli dev wifi rescan
-        retry_scan_ap=$(nmcli dev wifi | grep -w "${AP_NAME}" | awk '{print$2}')
+        retry_scan_ap=$(nmcli dev wifi | grep -w "${AP_NAME} " | awk '{print$2}')
         if [ "$retry_scan_ap" != "$AP_NAME" ]; then
             echo "FAIL, ret=-2"
             exit
