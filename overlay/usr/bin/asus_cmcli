@@ -1,5 +1,5 @@
 #!/bin/bash
-# VERSION=1.2_20230602_NO_FO
+# VERSION=1.1_20221209
 TAG="asus_cmcli"
 NETWORK_NAME="Cellular"
 APN_LIST=/etc/mm/apns-full.xml
@@ -64,6 +64,29 @@ read_modem() {
     else
         return 1
     fi
+}
+
+print_failover_show_command_usage() {
+    echo "Usage: asus_cmcli failover show {status | group}"
+    echo ""
+}
+
+print_failover_set_command_usage() {
+    echo "Usage: asus_cmcli failover set {status {on | off} | group {null | INTERFACES...}}"
+    echo ""
+    echo "Commands:"
+    echo ""
+    echo "  status:                 Stop/Start failover service"
+    echo "  group:                  Set interfaces to form a group to failover."
+    echo "                          Please use device name in nmcli device. The priority"
+    echo "                          are in descending order. If null is set, the default"
+    echo "                          priority is adopted, which is Ethernet > Wi-Fi > Mobile."
+    echo ""
+}
+
+print_failover_command_usage() {
+    echo "Usage: asus_cmcli failover {set | show} [COMMAND]"
+    echo ""
 }
 
 case "$1" in
@@ -559,22 +582,15 @@ case "$1" in
     case "$2" in
     "start")
         log "Enable keepalive service"
-        systemctl enable mm_keepalive
-	systemctl start mm_keepalive
+        focli set mm_keepalive on
         ;;
     "stop")
         log "Disable keepalive service"
-        systemctl disable mm_keepalive
-	systemctl stop mm_keepalive
+        focli set mm_keepalive off
         ;;
     "status")
-        flag=$(systemctl status mm_keepalive | grep "Active:")
-	if [[ "$flag" =~ "running" ]]; then
-		status="on"
-	else
-		status="off"
-	fi
-        log "Keepalive status: $status"
+        flag=$(focli show mm_keepalive)
+        log "Keepalive status: $flag"
         ;;
     *)
         echo "Usage: asus_cmcli keepalive [COMMAND]"
@@ -585,6 +601,49 @@ case "$1" in
         echo "  status:                         Show keepalive service's status"
         echo ""
         exit 1
+        ;;
+    esac
+    ;;
+"failover")
+    case "$2" in
+    "set")
+        case "$3" in
+        "status")
+            case "$4" in
+            "on")
+                focli set status on
+                ;;
+            "off")
+                focli set status off
+                ;;
+            *)
+                print_failover_set_command_usage
+                ;;
+            esac
+            ;;
+        "group")
+            focli set group ${@:4}
+            ;;
+        *)
+            print_failover_set_command_usage
+            ;;
+        esac
+        ;;
+    "show")
+        case "$3" in
+        "status")
+            focli show status
+            ;;
+        "group")
+            focli show group
+            ;;
+        *)
+            print_failover_show_command_usage
+            ;;
+        esac
+        ;;
+    *)
+        print_failover_command_usage
         ;;
     esac
     ;;
@@ -617,6 +676,7 @@ case "$1" in
     echo "  location_info:                  Show LAC, CellID and LCID"
     echo "  get_modems:                     List all available modems"
     echo "  keepalive [COMMAND]:            Set or get keepalive status"
+    echo "  failover [COMMAND]:             Failover related commands"
     echo ""
     exit 1
     ;;
