@@ -2163,6 +2163,7 @@ int wiringPiSetup (void)
 	// Open the master /dev/memory device
 	#ifdef TINKER_BOARD
 	tinker_board_setup(1);
+
 	#else
 	// Map the individual hardware components
 	// GPIO:

@@ -37,28 +37,27 @@
 
 extern int wpMode ;
 
-static const char *asusPinModeToString (int mode)
-{
-  if (mode == SERIAL)
-    return "SERL";
-  else if ( mode == PWM)
-    return "PWM";
-  else if ( mode == INPUT)
-    return "IN";
-  else if ( mode == OUTPUT)
-    return "OUT";
-  else if ( mode == CLKOUT)
-    return "CLK";
-  else if ( mode == CLK1_27M)
-    return "CLK";
-  else if ( mode == SPI)
-    return "SPI";
-  else if ( mode == I2C)
-    return "I2C";
-  else if ( mode == I2S)
-    return "I2S";
-  else
-    return " ";
+static const char *asusPinModeToString (int mode) {
+    if (mode == SERIAL)
+        return "SERL";
+    else if (mode == PWM)
+        return "PWM";
+    else if (mode == INPUT)
+        return "IN";
+    else if (mode == OUTPUT)
+        return "OUT";
+    else if (mode == CLKOUT)
+        return "CLK";
+    else if (mode == CLK1_27M)
+        return "CLK";
+    else if (mode == SPI)
+        return "SPI";
+    else if (mode == I2C)
+        return "I2C";
+    else if (mode == I2S)
+        return "I2S";
+    else
+        return " ";
 }
 
 /*
@@ -69,18 +68,17 @@ static const char *asusPinModeToString (int mode)
  *********************************************************************************
  */
 
-static void doReadallExternal (void)
-{
-  int pin ;
+static void doReadallExternal (void) {
+    int pin;
 
-  printf ("+------+---------+--------+\n") ;
-  printf ("|  Pin | Digital | Analog |\n") ;
-  printf ("+------+---------+--------+\n") ;
+    printf("+------+---------+--------+\n");
+    printf("|  Pin | Digital | Analog |\n");
+    printf("+------+---------+--------+\n");
 
-  for (pin = wiringPiNodes->pinBase ; pin <= wiringPiNodes->pinMax ; ++pin)
-    printf ("| %4d |  %4d   |  %4d  |\n", pin, digitalRead (pin), analogRead (pin)) ;
+    for (pin = wiringPiNodes->pinBase; pin <= wiringPiNodes->pinMax; ++pin)
+        printf("| %4d |  %4d   |  %4d  |\n", pin, digitalRead(pin), analogRead(pin));
 
-  printf ("+------+---------+--------+\n") ;
+    printf("+------+---------+--------+\n");
 }
 
 
@@ -95,88 +93,117 @@ static void doReadallExternal (void)
  */
 
 static char *alts [] =
-{
-  "IN", "OUT", "ALT5", "ALT4", "ALT0", "ALT1", "ALT2", "ALT3"
-} ;
+        {
+                "IN", "OUT", "ALT5", "ALT4", "ALT0", "ALT1", "ALT2", "ALT3"
+        } ;
 
 static int physToWpi [64] =
-{
-  -1,           // 0
-  -1, -1,       // 1, 2
-   8, -1,
-   9, -1,
-   7, 15,
-  -1, 16,
-   0,  1,
-   2, -1,
-   3,  4,
-  -1,  5,
-  12, -1,
-  13,  6,
-  14, 10,
-  -1, 11,       // 25, 26
-  30, 31,        // Actually I2C, but not used
-  21, -1,
-  22, 26,
-  23, -1,
-  24, 27,
-  25, 28,
-  -1, 29,
-  -1, -1,
-  -1, -1,
-  -1, -1,
-  -1, -1,
-  -1, -1,
-  17, 18,
-  19, 20,
-  -1, -1, -1, -1, -1, -1, -1, -1, -1
-} ;
+        {
+                -1,           // 0
+                -1, -1,       // 1, 2
+                8, -1,
+                9, -1,
+                7, 15,
+                -1, 16,
+                0, 1,
+                2, -1,
+                3, 4,
+                -1, 5,
+                12, -1,
+                13, 6,
+                14, 10,
+                -1, 11,       // 25, 26
+                30, 31,        // Actually I2C, but not used
+                21, -1,
+                22, 26,
+                23, -1,
+                24, 27,
+                25, 28,
+                -1, 29,
+                -1, -1,
+                -1, -1,
+                -1, -1,
+                -1, -1,
+                -1, -1,
+                17, 18,
+                19, 20,
+                -1, -1, -1, -1, -1, -1, -1, -1, -1
+        } ;
 
 static char *physNames [64][5] =
-{
-  {     NULL,     NULL,     NULL,     NULL,     NULL},
-  {"   3.3v","   3.3v","   3.3v","   3.3v","   3.3v"},    {"5v     ","5v     ","5v     ","5v     ","5v     "},//1,2
-  {"GPIO8A4","  SDA.1","       ","       ","       "},    {"5v     ","5v     ","5v     ","5v     ","5v     "},//3,4
-  {"GPIO8A5","  SCL.1","       ","       ","       "},    {"0v     ","0v     ","0v     ","0v     ","0v     "},//5,6
-  {"GPIO0C1"," CLKOUT","  CLKIN","       ","       "},    {"GPIO5B1","TxD.1  ","TS     ","       ","       "},//7,8
-  {"     0v","     0v","     0v","     0v","     0v"},    {"GPIO5B0","RxD.1  ","TS     ","       ","       "},//9,10
-  {"GPIO5B4"," SCLK.0","     TS"," CTSN.4","       "},    {"GPIO6A0","I2S_CLK","       ","       ","       "},//11,12
-  {"GPIO5B6"," MOSI.0","     TS","  TxD.4","       "},    {"0v     ","0v     ","0v     ","0v     ","0v     "},//13,14
-  {"GPIO5B7"," MISO.0","     TS","  RxD.4","       "},    {"GPIO5B2","CTSN.1 ","TS     ","       ","       "},//15,16
-  {"   3.3v","       ","       ","       ","       "},    {"GPIO5B3","RTSN.1 ","TS     ","       ","       "},//17,18
-  {"GPIO8B1"," MOSI.2","     SC","       ","       "},    {"0v     ","0v     ","0v     ","0v     ","0v     "},//19,20
-  {"GPIO8B0"," MISO.2","     SC","       ","       "},    {"GPIO5C3","TS     ","       ","       ","       "},//21,22
-  {"GPIO8A6"," SCLK.2","       ","       ","       "},    {"GPIO8A7","CE0.2  ","SC     ","       ","       "},//23,24
-  {"     0v","     0v","     0v","     0v","     0v"},    {"GPIO8A3","CE1.2  ","SC     ","       ","       "},//25,26
-  {"GPIO7C1","  SDA.4","       ","       ","       "},    {"GPIO7C2","SCL.4  ","       ","       ","       "},//27,28
-  {"GPIO5B5","  CE0.0","     TS"," RTSN.4","       "},    {"0v     ","0v     ","0v     ","0v     ","0v     "},//29.30
-  {"GPIO5C0","  CE1.0","     TS","       ","       "},    {"GPIO7C7","GPIO7C7","TxD.2  ","PWM.3  ","HDMI   "},//31,32
-  {"GPIO7C6","GPIO7C6","  RxD.2","  PWM.2","       "},    {"0v     ","0v     ","0v     ","0v     ","0v     "},//33,34
-  {"GPIO6A1"," I2S_FS","       ","       ","       "},    {"GPIO7A7","RxD.3  ","GPS_MAG","HSADCT ","       "},//35,36
-  {"GPIO7B0","  TxD.3","       ","       ","       "},    {"GPIO6A3","I2S_SDI","       ","       ","       "},//37,38
-  {"     0v","     0v","     0v","     0v","     0v"},    {"GPIO6A4","I2S_SDO","       ","       ","       "},//39,40
-  {     NULL,     NULL,     NULL,     NULL,     NULL},    {     NULL,     NULL,     NULL,     NULL,     NULL},
-  {     NULL,     NULL,     NULL,     NULL,     NULL},    {     NULL,     NULL,     NULL,     NULL,     NULL},
-  {     NULL,     NULL,     NULL,     NULL,     NULL},    {     NULL,     NULL,     NULL,     NULL,     NULL},
-  {     NULL,     NULL,     NULL,     NULL,     NULL},    {     NULL,     NULL,     NULL,     NULL,     NULL},
-  {     NULL,     NULL,     NULL,     NULL,     NULL},    {     NULL,     NULL,     NULL,     NULL,     NULL},
-  {"GPIO.17","       ","       ","       ","       "},    {"GPIO.18","       ","       ","       ","       "},
-  {"GPIO.19","       ","       ","       ","       "},    {"GPIO.20","       ","       ","       ","       "},
-  {     NULL,     NULL,     NULL,     NULL,     NULL},    {     NULL,     NULL,     NULL,     NULL,     NULL},
-  {     NULL,     NULL,     NULL,     NULL,     NULL},    {     NULL,     NULL,     NULL,     NULL,     NULL},
-  {     NULL,     NULL,     NULL,     NULL,     NULL},    {     NULL,     NULL,     NULL,     NULL,     NULL},
-  {     NULL,     NULL,     NULL,     NULL,     NULL},    {     NULL,     NULL,     NULL,     NULL,     NULL},
-  {     NULL,     NULL,     NULL,     NULL,     NULL}
-} ;
+        {
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {"     5v", "     5v",     "     5v",     "     5v",     "     5v"},
+                {"3.3v   ", "3.3v   ",     "3.3v   ",     "3.3v   ",     "3.3v   "},//1,2
+                {"     0v", "     0v",     "     0v",     "     0v",     "     0v"},
+                {"GPIO4C2", "I2S3MCLK_M1", "SPI3CLK_M1",  "PWM14_M1",    "       "},//3,4
+                {"GPIO3B1", "UART4RX_M1",  "       ",     "       ",     "       "},
+                {"GPIO4C3", "I2S3SCLK_M1", "SPI3MOSI_M1", "PWM15IR_M1",  "       "},//5,6
+                {"GPIO3B2", "UART4TX_M1",  "       ",     "       ",     "       "},
+                {"GPIO4C4", "I2S3LRCK_M1", "SPI3CS1 ",    "SPDIF_TX_M2", "       "},//7,8
+                {"GPIO3B3", "I2C5SCL_M0",  "       ",     "       ",     "       "},
+                {"GPIO4C5", "I2S3SDO_M1 ", "SPI3MISO_M1", "PWM12_M1",    "       "},//9,10
+                {"GPIO3B4", "I2C5SDA_M0",  "       ",     "       ",     "       "},
+                {"GPIO4C6", "I2S3SDI_M1 ", "SPI3CS0_M1",  "       ",     "       "},//11,12
+                {"ADCVIN6", "     ",       "       ",     "       ",     "       "},
+                {"ADCVIN7", "       ",     "       ",     "       ",     "       "},//13,14
+                {"GPIO5B7", " MISO.0",     "     TS",     "  RxD.4",     "       "},
+                {"GPIO5B2", "CTSN.1 ",     "TS     ",     "       ",     "       "},//15,16
+                {"   3.3v", "       ",     "       ",     "       ",     "       "},
+                {"GPIO5B3", "RTSN.1 ",     "TS     ",     "       ",     "       "},//17,18
+                {"GPIO8B1", " MOSI.2",     "     SC",     "       ",     "       "},
+                {"0v     ", "0v     ",     "0v     ",     "0v     ",     "0v     "},//19,20
+                {"GPIO8B0", " MISO.2",     "     SC",     "       ",     "       "},
+                {"GPIO5C3", "TS     ",     "       ",     "       ",     "       "},//21,22
+                {"GPIO8A6", " SCLK.2",     "       ",     "       ",     "       "},
+                {"GPIO8A7", "CE0.2  ",     "SC     ",     "       ",     "       "},//23,24
+                {"     0v", "     0v",     "     0v",     "     0v",     "     0v"},
+                {"GPIO8A3", "CE1.2  ",     "SC     ",     "       ",     "       "},//25,26
+                {"GPIO7C1", "  SDA.4",     "       ",     "       ",     "       "},
+                {"GPIO7C2", "SCL.4  ",     "       ",     "       ",     "       "},//27,28
+                {"GPIO5B5", "  CE0.0",     "     TS",     " RTSN.4",     "       "},
+                {"0v     ", "0v     ",     "0v     ",     "0v     ",     "0v     "},//29.30
+                {"GPIO5C0", "  CE1.0",     "     TS",     "       ",     "       "},
+                {"GPIO7C7", "GPIO7C7",     "TxD.2  ",     "PWM.3  ",     "HDMI   "},//31,32
+                {"GPIO7C6", "GPIO7C6",     "  RxD.2",     "  PWM.2",     "       "},
+                {"0v     ", "0v     ",     "0v     ",     "0v     ",     "0v     "},//33,34
+                {"GPIO6A1", " I2S_FS",     "       ",     "       ",     "       "},
+                {"GPIO7A7", "RxD.3  ",     "GPS_MAG",     "HSADCT ",     "       "},//35,36
+                {"GPIO7B0", "  TxD.3",     "       ",     "       ",     "       "},
+                {"GPIO6A3", "I2S_SDI",     "       ",     "       ",     "       "},//37,38
+                {"     0v", "     0v",     "     0v",     "     0v",     "     0v"},
+                {"GPIO6A4", "I2S_SDO",     "       ",     "       ",     "       "},//39,40
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {"GPIO.17", "       ",     "       ",     "       ",     "       "},
+                {"GPIO.18", "       ",     "       ",     "       ",     "       "},
+                {"GPIO.19", "       ",     "       ",     "       ",     "       "},
+                {"GPIO.20", "       ",     "       ",     "       ",     "       "},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL},
+                {NULL,      NULL,          NULL,          NULL,          NULL}
+        } ;
 
 
-int getAndTranslateAlt(int pin)
-{
-    int i ,ret;
-    i = asus_get_pinAlt (pin);
+int getAndTranslateAlt(int pin) {
+    int i, ret;
+    i = asus_get_pinAlt(pin);
 
-    switch(i)
-    {
+    switch (i) {
         case FSEL_OUTP://func 0
             ret = 0;
             break;
@@ -184,16 +211,16 @@ int getAndTranslateAlt(int pin)
             ret = 0;
             break;
         case FSEL_ALT0://func 1
-            ret = 0+1;
+            ret = 0 + 1;
             break;
         case FSEL_ALT1://func 2
-            ret = 1+1;
+            ret = 1 + 1;
             break;
         case FSEL_ALT2://func 3
-            ret = 2+1;
+            ret = 2 + 1;
             break;
         case FSEL_ALT3://func 4
-            ret = 3+1;
+            ret = 3 + 1;
             break;
         default:
             ret = 0;
@@ -209,100 +236,95 @@ int getAndTranslateAlt(int pin)
  *********************************************************************************
  */
 
-static void readallPhys (int physPin, int model)
-{
-  int pin;
-  int *physToWpi_3N = asus_get_physToGpio(1);
-  if (physPinToGpio (physPin) == -1)
-    printf (" |     |    ") ;
-  else
-    printf (" | %3d | %3d", physPinToGpio (physPin), physToWpi_3N [physPin]) ;
-  printf (" | %s", physNames [physPin][getAndTranslateAlt(physPinToGpio (physPin))]) ;
+static void readallPhys (int physPin, int model) {
+    int pin;
+    int *physToWpi_3N = asus_get_physToGpio(1);
 
-  if (physToWpi_3N [physPin] == -1)
-    printf (" |      |  ") ;
-  else
-  {
-
-     wpMode = WPI_MODE_PHYS;
-    /**/ if (wpMode == WPI_MODE_GPIO)
-      pin = physPinToGpio (physPin) ;
-    else if (wpMode == WPI_MODE_PHYS)
-      pin = physPin ;
+    // CPU | wPi
+    if (physPinToGpio(physPin) == -1)
+        printf(" |     |    ");
     else
-      pin = physToWpi_3N [physPin] ;
+        printf(" | %3d | %3d", physPinToGpio(physPin), physToWpi_3N[physPin]);
 
+    // Name
+    printf(" | %s", physNames[physPin][getAndTranslateAlt(physPinToGpio(physPin))]);
 
-   if (model == PI_MODEL_TB)
-   {
-     printf (" | %4s", asusPinModeToString(getPinMode(pin))) ;
-   }else
-     printf (" | %4s", alts [getAlt (pin)]) ;
+    // Mode
+    if (physToWpi_3N[physPin] == -1)
+        printf(" |      |  ");
+    else {
 
-   //printf (" | %d", digitalRead (pin)) ;
-  }
+        wpMode = 999; // Go 3N Pin
+        /**/ if (wpMode == WPI_MODE_GPIO)
+            pin = physPinToGpio(physPin);
+        else if (wpMode == WPI_MODE_PHYS)
+            pin = physPin;
+        else
+            pin = physToWpi_3N[physPin];
+
+        if (model == PI_MODEL_TB) {
+            printf(" | %4s", asusPinModeToString(getPinMode(pin)));
+        } else
+            printf(" | %4s", alts[getAlt(pin)]);
+
+	// V
+        printf(" | %d", asus_digitalRead(pin));
+    }
 
 // Pin numbers:
-
-  printf (" | %2d", physPin) ;
-  ++physPin ;
-  printf (" || %-2d", physPin) ;
+    printf(" | %2d", physPin);
+    ++physPin;
+    printf(" || %-2d", physPin);
 
 // Same, reversed
-  wpMode = WPI_MODE_PHYS;
-  if (physToWpi_3N [physPin] == -1)
-  {
-    printf (" |   |     ") ;
-  }else
-  {
-    /**/ if (wpMode == WPI_MODE_GPIO)
-      pin = physPinToGpio (physPin) ;
-    else if (wpMode == WPI_MODE_PHYS)
-      pin = physPin ;
-    else
-      pin = physToWpi_3N [physPin] ;
+    wpMode = 999;
+    if (physToWpi_3N[physPin] == -1) {
+        printf(" |   |     ");
+    } else {
+        /**/ if (wpMode == WPI_MODE_GPIO)
+            pin = physPinToGpio(physPin);
+        else if (wpMode == WPI_MODE_PHYS)
+            pin = physPin;
+        else
+            pin = physToWpi_3N[physPin];
 
-   //printf (" | %d", digitalRead (pin)) ;
-   //printf (" |     ") ;
-   if (model == PI_MODEL_TB)
-   {
-     printf (" | %-4s", asusPinModeToString(getPinMode (pin))) ;
-   }else
-     printf (" | %-4s", alts [getAlt (pin)]) ;
-  }
-  printf (" | %-5s", physNames [physPin][getAndTranslateAlt(physPinToGpio (physPin))]) ;
+        printf(" | %d", asus_digitalRead(pin));
+        //printf (" |     ") ;
+        if (model == PI_MODEL_TB) {
+            printf(" | %-4s", asusPinModeToString(getPinMode(pin)));
+        } else
+            printf(" | %-4s", alts[getAlt(pin)]);
+    }
+    printf(" | %-5s", physNames[physPin][getAndTranslateAlt(physPinToGpio(physPin))]);
 
-  if (physToWpi_3N[physPin] == -1)
-    printf (" |     |    ") ;
-  else
-        {
-        printf (" | %-3d | %-3d", physToWpi_3N [physPin], physPinToGpio (physPin)) ;
-        }
-  printf (" |\n") ;
+    if (physToWpi_3N[physPin] == -1)
+        printf(" |     |    ");
+    else {
+        printf(" | %-3d | %-3d", physToWpi_3N[physPin], physPinToGpio(physPin));
+    }
+    printf(" |\n");
 }
 
 
-void cmReadall (void)
-{
-  int pin ;
+void cmReadall (void) {
+    int pin;
 
-  printf ("+-----+------+-------+      +-----+------+-------+\n") ;
-  printf ("| Pin | Mode | Value |      | Pin | Mode | Value |\n") ;
-  printf ("+-----+------+-------+      +-----+------+-------+\n") ;
+    printf("+-----+------+-------+      +-----+------+-------+\n");
+    printf("| Pin | Mode | Value |      | Pin | Mode | Value |\n");
+    printf("+-----+------+-------+      +-----+------+-------+\n");
 
-  for (pin = 0 ; pin < 28 ; ++pin)
-  {
-    printf ("| %3d ", pin) ;
-   // printf ("| %-4s ", alts [getAlt (pin)]) ;
-    printf ("| %s  ", digitalRead (pin) == HIGH ? "High" : "Low ") ;
-    printf ("|      ") ;
-    printf ("| %3d ", pin + 28) ;
-  //  printf ("| %-4s ", alts [getAlt (pin + 28)]) ;
-    printf ("| %s  ", digitalRead (pin + 28) == HIGH ? "High" : "Low ") ;
-    printf ("|\n") ;
-  }
+    for (pin = 0; pin < 28; ++pin) {
+        printf("| %3d ", pin);
+        // printf ("| %-4s ", alts [getAlt (pin)]) ;
+        printf("| %s  ", digitalRead(pin) == HIGH ? "High" : "Low ");
+        printf("|      ");
+        printf("| %3d ", pin + 28);
+        //  printf ("| %-4s ", alts [getAlt (pin + 28)]) ;
+        printf("| %s  ", digitalRead(pin + 28) == HIGH ? "High" : "Low ");
+        printf("|\n");
+    }
 
-  printf ("+-----+------+-------+      +-----+------+-------+\n") ;
+    printf("+-----+------+-------+      +-----+------+-------+\n");
 }
 
 
@@ -312,35 +334,35 @@ void cmReadall (void)
  *********************************************************************************
  */
 
-void abReadall (int model, int rev)
-{
-  int pin ;
-  char *type ;
+void abReadall (int model, int rev) {
+    int pin;
+    char *type;
 
-  if (model == PI_MODEL_A)
-    type = " A" ;
-  else
-    if (rev == PI_VERSION_2)
-      type = "B2" ;
+    if (model == PI_MODEL_A)
+        type = " A";
+    else if (rev == PI_VERSION_2)
+        type = "B2";
     else
-      type = "B1" ;
+        type = "B1";
 
-  printf (" +-----+-----+---------+------+---+-Model %s-+---+------+---------+-----+-----+\n", type) ;
-  printf (" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU |\n") ;
-  printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
-  for (pin = 1 ; pin <= 26 ; pin += 2)
-    readallPhys (pin, model) ;
+    printf(" +-----+-----+---------+------+---+-Model %s-+---+------+---------+-----+-----+\n",
+           type);
+    printf(" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU |\n");
+    printf(" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n");
+    for (pin = 1; pin <= 26; pin += 2)
+        readallPhys(pin, model);
 
-  if (rev == PI_VERSION_2) // B version 2
-  {
-    printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
-    for (pin = 51 ; pin <= 54 ; pin += 2)
-      readallPhys (pin, model) ;
-  }
+    if (rev == PI_VERSION_2) // B version 2
+    {
+        printf(" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n");
+        for (pin = 51; pin <= 54; pin += 2)
+            readallPhys(pin, model);
+    }
 
-  printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
-  printf (" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU|\n") ;
-  printf (" +-----+-----+---------+------+---+-Model %s-+---+------+---------+-----+-----+\n", type) ;
+    printf(" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n");
+    printf(" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU|\n");
+    printf(" +-----+-----+---------+------+---+-Model %s-+---+------+---------+-----+-----+\n",
+           type);
 }
 
 
@@ -350,56 +372,54 @@ void abReadall (int model, int rev)
  *********************************************************************************
  */
 
-static void plus2header (int model)
-{
-  /**/ if (model == PI_MODEL_AP)
-    printf (" +-----+-----+---------+------+---+--A Plus--+---+------+---------+-----+-----+\n") ;
-  else if (model == PI_MODEL_BP)
-    printf (" +-----+-----+---------+------+---+--B Plus--+---+------+---------+-----+-----+\n") ;
-  else if (model == PI_MODEL_ZERO)
-    printf (" +-----+-----+---------+------+---+-Pi Zero--+---+------+---------+-----+-----+\n") ;
-  else if (model == PI_MODEL_TB)
-    printf (" +-----+-----+---------+------+---+--Tinker--+---+------+---------+-----+-----+\n") ;
-  else
-    printf (" +-----+-----+---------+------+---+---Pi ----+---+------+---------+-----+-----+\n") ;
+static void plus2header (int model) {
+    /**/ if (model == PI_MODEL_AP)
+        printf(" +-----+-----+---------+------+---+--A Plus--+---+------+---------+-----+-----+\n");
+    else if (model == PI_MODEL_BP)
+        printf(" +-----+-----+---------+------+---+--B Plus--+---+------+---------+-----+-----+\n");
+    else if (model == PI_MODEL_ZERO)
+        printf(" +-----+-----+---------+------+---+-Pi Zero--+---+------+---------+-----+-----+\n");
+    else if (model == PI_MODEL_TB)
+        printf(" +-----+-----+---------+------+---+--Tinker--+---+------+---------+-----+-----+\n");
+    else
+        printf(" +-----+-----+---------+------+---+---Pi ----+---+------+---------+-----+-----+\n");
 }
 
 
-void piPlusReadall (int model)
-{
-  int pin ;
+void piPlusReadall (int model) {
+    int pin;
 
-  plus2header (model) ;
+    plus2header(model);
 
-  printf (" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU |\n") ;
-  printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
-  for (pin = 1 ; pin <= 40 ; pin += 2)
-    readallPhys (pin, model) ;
-  printf (" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n") ;
-  printf (" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU |\n") ;
+    printf(" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU |\n");
+    printf(" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n");
+    for (pin = 1; pin <= 14; pin += 2)
+        readallPhys(pin, model);
+    printf(" +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+\n");
+    printf(" | CPU | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | CPU |\n");
 
-  plus2header (model) ;
+    plus2header(model);
 }
 
 
-void doReadall (void)
-{
-  int model, rev, mem, maker, overVolted ;
+void doReadall (void) {
+    int model, rev, mem, maker, overVolted;
 
-  if (wiringPiNodes != NULL)        // External readall
-  {
-    doReadallExternal () ;
-    return ;
-  }
-  model = 10;
-  //piBoardId (&model, &rev, &mem, &maker, &overVolted) ;
+    if (wiringPiNodes != NULL)        // External readall
+    {
+        doReadallExternal();
+        return;
+    }
+    model = 10;
+    //piBoardId (&model, &rev, &mem, &maker, &overVolted) ;
 
-  /**/ if ((model == PI_MODEL_A) || (model == PI_MODEL_B))
-    abReadall (model, rev) ;
-  else if ((model == PI_MODEL_BP) || (model == PI_MODEL_AP) || (model == PI_MODEL_2) || (model == PI_MODEL_ZERO)|| (model == PI_MODEL_TB))
-    piPlusReadall (model) ;
-  else if (model == PI_MODEL_CM)
-    cmReadall () ;
-  else
-    printf ("Oops - unable to determine board type... model: %d\n", model) ;
+    /**/ if ((model == PI_MODEL_A) || (model == PI_MODEL_B))
+        abReadall(model, rev);
+    else if ((model == PI_MODEL_BP) || (model == PI_MODEL_AP) || (model == PI_MODEL_2) ||
+             (model == PI_MODEL_ZERO) || (model == PI_MODEL_TB))
+        piPlusReadall(model);
+    else if (model == PI_MODEL_CM)
+        cmReadall();
+    else
+        printf("Oops - unable to determine board type... model: %d\n", model);
 }
