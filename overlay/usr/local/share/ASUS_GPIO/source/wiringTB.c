@@ -139,7 +139,7 @@ int GET_PULL_OFFSET(int bank, int pin)
         return PULL_TABLE[bank][(int)(pin / 8)];
 }
 
-// Locker: 改成3B和4C table分開
+// TODO: 改成3B和4C table分開
 int GET_DRV_OFFSET(int bank, int pin)
 {
 	int grp = pin / 8;
@@ -189,9 +189,10 @@ int tinker_board_setup(int rev)
                         return -1;
                 }
         }
-        for(i=0;i<5;i++)
+        for(i=1;i<5;i++)
         {
                 // mmap GPIO 
+
                 #ifdef ANDROID
                 gpio_map0[i] = mmap64(
                 #else
@@ -210,6 +211,7 @@ int tinker_board_setup(int rev)
                         return -1;
                 }
                 gpio0[i] = (volatile unsigned *)gpio_map0[i];
+
         }//for
         /////////////mmap grf////////////
         #ifdef ANDROID
@@ -222,7 +224,7 @@ int tinker_board_setup(int rev)
                 PROT_READ|PROT_WRITE, // Enable reading & writting to mapped memory 
                 MAP_SHARED,       // Shared with other processes 
                 mem_fd,           // File to map 
-                RK3568_GRF_PHYS         //Offset to GPIO peripheral 
+                RK3568_SYS_GRF         //Offset to GPIO peripheral 
         );
         if (grf_map  == MAP_FAILED)
         {
@@ -314,7 +316,7 @@ int gpio_is_valid(int gpio)
         }
 }
 
-// Locker: Tinker3N no CLK
+//  Tinker3N no CLK
 /*
 #if 0
 int gpio_clk_disable(int gpio)
@@ -358,8 +360,75 @@ int asus_get_pin_mode(int pin)
         int bank, bank_pin;
         bank = gpioToBank(pin);
         bank_pin = gpioToBankPin(pin);
-	    int addr_SWPORT_DDR;
+	int addr_SWPORT_DDR;
 
+        switch(pin)
+        {
+                //GPIO3B
+                case GPIO3_B1 :
+                case GPIO3_B2 :
+			value = *(grf+GRF_GPIO3B_IOMUX_L/4) & (0x07 << 4*(bank_pin % 4));
+			switch(value)
+			{
+				case 0: func = GPIO; 	break;
+				case 4: func = SERIAL;	break;
+				default: func = -1;
+			}
+			break;
+                case GPIO3_B3 :
+			value = *(grf+GRF_GPIO3B_IOMUX_L/4) & (0x07 << 4*(bank_pin % 4));
+			switch(value)
+			{
+				case 0: func = GPIO; 	break;
+				case 4: func = I2C;	break;
+				default: func = -1;
+			}
+			break;
+		case GPIO3_B4 :
+			value = *(grf+GRF_GPIO3B_IOMUX_H/4) & (0x07 << 4*(bank_pin % 4));
+			switch(value)
+			{
+				case 0: func = GPIO; 	break;
+				case 4: func = I2C;	break;
+				default: func = -1;
+			}
+			break;
+                case GPIO4_C2 :
+                case GPIO4_C3 :
+			value = *(grf+GRF_GPIO4C_IOMUX_L/4) & (0x07 << 4*(bank_pin % 4));
+			switch(value)
+			{
+				case 0: func = GPIO; 	break;
+				case 1: func = PWM;	break;
+				case 2: func = SPI;	break;
+				case 5: func = I2S;	break;
+				default: func = -1;
+			}
+			break;
+                case GPIO4_C4 :
+			value = *(grf+GRF_GPIO3B_IOMUX_H/4) & (0x07 << 4*(bank_pin % 4));
+			switch(value)
+			{
+				case 0: func = GPIO; 	break;
+				case 5: func = I2S;	break;
+				default: func = -1;
+			}
+			break;
+                case GPIO4_C5 :
+                case GPIO4_C6 :
+			value = *(grf+GRF_GPIO4C_IOMUX_H/4) & (0x07 << 4*(bank_pin % 4));
+			switch(value)
+			{
+				case 0: func = GPIO; 	break;
+				case 1: func = PWM;	break;
+				case 2: func = SPI;	break;
+				case 5: func = I2S;	break;
+				default: func = -1;
+			}
+			break;
+        }
+
+	/*
         switch(pin)
         {
                 //GPIO3B
@@ -426,6 +495,7 @@ int asus_get_pin_mode(int pin)
                         }
                         break;
         }
+	*/
 
        if (func == GPIO)
        {
@@ -445,34 +515,36 @@ int asus_get_pin_mode(int pin)
 		       addr_SWPORT_DDR = GPIO_SWPORT_DDR_H;
 		       //GPIO_SWPORT_DDR_H
 	       }
-		if(*(gpio0[bank] + addr_SWPORT_DDR) & (1 << bank_pin))
+		if(*(gpio0[bank] + addr_SWPORT_DDR/4) & (1 << (bank_pin%16)))
 			func = OUTPUT;
 		else
 			func = INPUT;
         }
+        printf("\nget_pin_mode: pin=%d, value=%x, func=%x\n",pin, value, func);
         return func;
 }
 
 void asus_set_pinmode_as_gpio(int pin)
 {
+		
         switch(pin)
         {
                 case GPIO3_B1 :
                 case GPIO3_B2 :
                 case GPIO3_B3 :
-                        *(grf+GRF_GPIO3B_IOMUX_L/4) =  (*(grf+GRF_GPIO3B_IOMUX_L/4) | (0x03<<((pin%8)*2+16))) & (~(0x03<<((pin%8)*2)));
+                        *(grf+GRF_GPIO3B_IOMUX_L/4) = (0x07 << (4*(pin%4)+ 16));
 			break;
                 case GPIO3_B4 :
-                        *(grf+GRF_GPIO3B_IOMUX_H/4) =  (*(grf+GRF_GPIO3B_IOMUX_H/4) | (0x03<<((pin%8)*2+16))) & (~(0x03<<((pin%8)*2)));
+                        *(grf+GRF_GPIO3B_IOMUX_H/4) = (0x07 << (4*(pin%4)+ 16));
 			break;
                 case GPIO4_C2 :
                 case GPIO4_C3 :
-                        *(grf+GRF_GPIO4C_IOMUX_L/4) =  (*(grf+GRF_GPIO4C_IOMUX_L/4) | (0x03<<((pin%8)*2+16))) & (~(0x03<<((pin%8)*2)));
+                        *(grf+GRF_GPIO4C_IOMUX_L/4) = (0x07 << (4*(pin%4)+ 16));
 			break;
                 case GPIO4_C4 :
                 case GPIO4_C5 :
                 case GPIO4_C6 :
-                        *(grf+GRF_GPIO4C_IOMUX_H/4) =  (*(grf+GRF_GPIO4C_IOMUX_H/4) | (0x03<<((pin%8)*2+16))) & (~(0x03<<((pin%8)*2)));
+                        *(grf+GRF_GPIO4C_IOMUX_H/4) = (0x07 << (4*(pin%4)+ 16));
                         break;
                 default:
                         printf("wrong gpio\n");
@@ -481,7 +553,6 @@ void asus_set_pinmode_as_gpio(int pin)
 
 }
 
-// Locker: 增加判斷pin是L或H
 void asus_set_pin_mode(int pin, int mode)
 {
         int bank, bank_pin;
@@ -494,25 +565,29 @@ void asus_set_pin_mode(int pin, int mode)
         bank = gpioToBank(pin);
         bank_pin = gpioToBankPin(pin);
 
+
+
 	if(bank_pin < 16)	addr_SWPORT_DDR = GPIO_SWPORT_DDR_L;
-	else			addr_SWPORT_DDR = GPIO_SWPORT_DDR_H;
+	else
+	{		
+		addr_SWPORT_DDR = GPIO_SWPORT_DDR_H;
+		bank_pin %= 16;
+	}
         
 	if(INPUT == mode)
         {
+
                 asus_set_pinmode_as_gpio(pin);
-                *(gpio0[bank]+addr_SWPORT_DDR) &= ~(1<<bank_pin);
+                *(gpio0[bank]+addr_SWPORT_DDR/4) = (0x1<< (bank_pin+16));
         }
         else if(OUTPUT == mode)
         {
                 asus_set_pinmode_as_gpio(pin);
-                *(gpio0[bank]+addr_SWPORT_DDR) |= (1<<bank_pin);
+                *(gpio0[bank]+addr_SWPORT_DDR/4) = (0x10001<<bank_pin);
         } 
         else if(PWM_OUTPUT == mode)
         {
                 //set pin PWMx to pwm mode
-		//
-		// Locker: TODO
-		// Locker: 可能要檢查write access有沒有enable
                 if(pin == PWM12)
                 {
 			tmp = *(grf + GRF_GPIO4C_IOMUX_H);
@@ -544,7 +619,7 @@ void asus_set_pin_mode(int pin, int mode)
                         printf("This pin cannot set as pwm out\n");
                 }
         }
-	// Locker: 3N no gpio clock
+	// 3N no gpio clock
 	/*
         else if(GPIO_CLOCK == mode)
         {
@@ -558,7 +633,6 @@ void asus_set_pin_mode(int pin, int mode)
 }
 
 
-// Locker: TODO
 
 void asus_digitalWrite(int pin, int value)
 {
@@ -585,7 +659,12 @@ void asus_digitalWrite(int pin, int value)
 		bank_pin = bank_pin % 16;
                 //GPIO_SWPORT_DDR_H
         }
+	if (value == 1)
+        	*(gpio0[bank]+val_SWPORT_DR/4) = (0x10001<<bank_pin);
+	else
+        	*(gpio0[bank]+val_SWPORT_DR/4) = (0x1<<(bank_pin+16));
 
+	/*
 	dir_tmp = *(volatile unsigned *)(gpio_map0[bank]+dir_SWPORT_DDR);
 	dir_tmp |= (1<<bank_pin+16);
         *(volatile unsigned *)(gpio_map0[bank]+dir_SWPORT_DDR) = dir_tmp;
@@ -607,9 +686,10 @@ void asus_digitalWrite(int pin, int value)
 		val_tmp &= ~(1 << bank_pin);
                 *(volatile unsigned *)(gpio_map0[bank]+val_SWPORT_DR) = val_tmp;
         }
+	*/
 }
 
-// Locker: Done
+
 int asus_digitalRead(int pin)
 {
         int value;
@@ -617,7 +697,8 @@ int asus_digitalRead(int pin)
         bank = gpioToBank(pin);
         bank_pin = gpioToBankPin(pin);
 
-        value = (((*(gpio0[bank]+GPIO_EXT_PORT)) & (1 << bank_pin)) >> bank_pin);
+        value = (*(gpio0[bank]+GPIO_EXT_PORT/4) >> bank_pin) & 0x1;
+
         return value;
 }
 
@@ -739,7 +820,6 @@ void asus_set_pwmFrequency(int pin, int divisor)
                 default:
                         break;
         }
-	// Locker: 不確定為什麼
         if (divisor > 0xff)
                 divisor = 0x100;
         else if(divisor < 2)
@@ -794,7 +874,7 @@ void asus_pwm_write(int pin, int value)
                 {
                         *(pwm+PWM_CTRL_OFFSET) &= ~(1<<5);
                 }
-                *(pwm+PWM_CTRL_OFFSET) |= (1<<1); // Locker: PWM continuous mode: 2b01
+                *(pwm+PWM_CTRL_OFFSET) |= (1<<1); // PWM continuous mode: 2b01
                 *(pwm+PWM_CTRL_OFFSET) &= ~(1<<2);
                 *(pwm+PWM_CTRL_OFFSET) |= (1<<4);
                 *(pwm+PWM_CTRL_OFFSET) |= (1<<0); //Enable PWM
@@ -821,7 +901,7 @@ void asus_pwmToneWrite(int pin, int freq)
 			break;
         }
 
-	// Locker: not sure
+	// TODO: not sure
         if(divi == 0)
                 divi = 512;
         if (freq == 0)
@@ -836,7 +916,7 @@ void asus_pwmToneWrite(int pin, int freq)
 }
 
 
-// Locker: GPIO clock?????
+// 
 /*
 void asus_set_gpioClockFreq(int pin, int freq)
 {
@@ -855,7 +935,7 @@ void asus_set_gpioClockFreq(int pin, int freq)
 }
 */
 
-// Locker: TODO
+// 
 int asus_get_pinAlt(int pin)
 {
         int alt;
@@ -915,7 +995,6 @@ int asus_get_pinAlt(int pin)
         return alt;
 }
 
-// Locker: TODO
 void SetGpioMode(int pin, int alt)
 {
         alt = ~alt & 0x3;
@@ -948,7 +1027,6 @@ void SetGpioMode(int pin, int alt)
         }
 }
 
-// Locker: TODO
 void asus_set_pinAlt(int pin, int alt)
 {
         int bank, bank_pin;
@@ -978,31 +1056,55 @@ void asus_set_pinAlt(int pin, int alt)
 }
 
 
-//drv_type={0:2mA, 1:4mA, 2:8mA, 3:12mA}
+/* drv_type:
+ * 6'000000: disable (-1)
+ * 6'000001: lv0
+ * 6'000011: lv1
+ * 6'000111: lv2
+ * 6'001111: lv3
+ * 6'011111: lv4
+ * 6'111111: lv5
+ */
+
 void asus_set_GpioDriveStrength(int pin, int drv_type)
 {
         int bank, bank_pin;
         int GPIO_E_offset;
         //int write_en = 0x3f;
-	unsigned int tmp;
+	int value;
+
         if(!gpio_is_valid(pin))
         {
                 printf("wrong gpio\n");
                 return;
         }
+	if(drv_type < 0 || drv_type > 6)
+	{
+		printf("wrong driver strength type\n");
+		return;
+	}
+
         bank = gpioToBank(pin);
         bank_pin = gpioToBankPin(pin);
+
+	value = 1 << (drv_type + 1) - 1;
+
         GPIO_E_offset = GET_DRV_OFFSET(bank, bank_pin);
         if(GPIO_E_offset == -1)
         {
                 printf("wrong offset\n");
                 return;
         }
-	
+
+	*(grf + GPIO_E_offset/4) = (0x3f << ((bank_pin % 2) * 8 + 16)) 
+				+ (value << ((bank_pin % 2) * 8));
+
+	/*	
 	drv_type = 1 << (drv_type + 1) - 1;
 	tmp = *(grf + GPIO_E_offset);
 	tmp = tmp | (drv_type << ((bank_pin % 2)*8 + 16)) | (drv_type << ((bank_pin % 2)*8));
 	*(grf + GPIO_E_offset) = tmp;
+	*/
 	/*
         write_bit = (bank_pin % 8) << 1;
         drv_type &= 0x3;
@@ -1022,6 +1124,9 @@ int asus_get_GpioDriveStrength(int pin)
         int GPIO_E_offset;
         int write_bit;
         volatile unsigned *reg;
+
+	int value, drv_type = -1;
+
         if(!gpio_is_valid(pin))
         {
                 printf("wrong gpio\n");
@@ -1035,7 +1140,17 @@ int asus_get_GpioDriveStrength(int pin)
                 printf("wrong offset\n");
                 return -1;
         }
-	return (*(grf + GPIO_E_offset) >> (bank_pin % 2)*8) & 0x3f;
+
+	value =	0x3f & (*(grf + GPIO_E_offset / 4) >> ((bank_pin % 2) * 8)) + 1;
+
+	while(value >>= 1)
+	{
+		drv_type++;
+	}
+
+
+	return drv_type;
+	//return (*(grf + GPIO_E_offset) >> (bank_pin % 2)*8) & 0x3f;
 	/*
         write_bit = (bank_pin % 8) << 1;
         return (*(reg+GPIO_E_offset/4) >> write_bit) & 0x3;*/

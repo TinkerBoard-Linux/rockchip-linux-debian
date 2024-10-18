@@ -229,7 +229,7 @@ static PyObject *py_setup_channel(PyObject *self, PyObject *args, PyObject *kwar
 
 	int setup_one(void)
 	{
-		
+
 		if (get_gpio_number(channel, &gpio))
 			return 0;
 
@@ -397,6 +397,7 @@ static PyObject *py_output_gpio(PyObject *self, PyObject *args)
 
 	int output(void) 
 	{
+		
 		if (get_gpio_number(channel, &gpio))
 			return 0;
 
@@ -2060,7 +2061,6 @@ PyMODINIT_FUNC initGPIO(void)
 	// register exit functions - last declared is called first
 	if (Py_AtExit(cleanup) != 0)
 	{
-		printf("exit 1\n");
 		setup_error = 1;
 
 		cleanup();
@@ -2073,7 +2073,6 @@ PyMODINIT_FUNC initGPIO(void)
 
 	if (Py_AtExit(event_cleanup_all) != 0)
 	{
-		printf("exit 2\n");
 		setup_error = 1;
 
 		cleanup();

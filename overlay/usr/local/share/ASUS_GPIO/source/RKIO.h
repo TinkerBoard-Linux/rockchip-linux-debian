@@ -51,17 +51,16 @@
 #define	PUD_DOWN                1
 #define	PUD_UP                  2
 
-// Locker: GPIO to HW#
-#define GPIO3_B1	105
-#define GPIO3_B2	106
-#define GPIO3_B3	107
-#define GPIO3_B4	108
+#define GPIO3_B1	105 // 9
+#define GPIO3_B2	106 // 10
+#define GPIO3_B3	107 // 11
+#define GPIO3_B4	108 // 12
 
-#define GPIO4_C2	146
-#define GPIO4_C3	147
-#define GPIO4_C4	148
-#define GPIO4_C5	149
-#define GPIO4_C6	150
+#define GPIO4_C2	146 // 2 for 16, 18 for 32
+#define GPIO4_C3	147 // 3 for 16, 19 for 32
+#define GPIO4_C4	148 // 4 for 16, 20 for 32
+#define GPIO4_C5	149 // 5 for 16, 21 for 32
+#define GPIO4_C6	150 // 6 for 16, 22 for 32
 
 #define PWM12		GPIO4_C5
 #define PWM13		GPIO4_C6
@@ -72,13 +71,14 @@
 #define RK3568_PMU              0xfdcd0000
 #define PMU_GPIO0C_IOMUX        0x008c
 
-// Locker: TODO: check calculate
-#define RK3568_GPIO(x)          (GPIO0_BASE+x*GPIO_LENGTH+(x>0)*GPIO_CHANNEL)
+#define RK3568_GPIO(x)          (GPIO0_BASE+(x-1)*GPIO_LENGTH)
+//+(x>0)*GPIO_CHANNEL)
 #define GPIO_LENGTH             0x00010000
 #define GPIO_CHANNEL            0x009d0000
-#define GPIO0_BASE              0xfdd60000
+#define GPIO0_BASE              0xfe740000 //ignore GPIO0, 76 for 3, 77 for 4
 #define GPIO_BANK               5
 #define RK3568_GRF_PHYS         0xfdc20000
+#define RK3568_SYS_GRF		0xfdc60000
 
 #define GRF_GPIO3B_IOMUX_L 	0x0048
 #define GRF_GPIO3B_IOMUX_H 	0x004C
@@ -91,7 +91,6 @@
 #define GRF_GPIO4C_P        0x00b8
 
 /* Drive Strength */
-// Locker: not sure
 #define GRF_GPIO3B_DS_0		0x0290
 #define GRF_GPIO3B_DS_1		0x0294
 #define GRF_GPIO3B_DS_2		0x0298

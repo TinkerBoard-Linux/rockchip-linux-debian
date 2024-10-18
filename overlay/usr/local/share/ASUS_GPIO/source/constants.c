@@ -89,7 +89,7 @@ void define_constants(PyObject *module)
    both_edge = Py_BuildValue("i", BOTH_EDGE + PY_EVENT_CONST_OFFSET);
    PyModule_AddObject(module, "BOTH", both_edge);
 
-   version = Py_BuildValue("s", "0.1");
+   version = Py_BuildValue("s", "1.0");
    PyModule_AddObject(module, "VERSION", version);
    
    drv_2ma = Py_BuildValue("i", E_2MA);
