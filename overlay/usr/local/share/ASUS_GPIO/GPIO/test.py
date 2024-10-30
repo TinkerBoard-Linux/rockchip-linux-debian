@@ -1,2 +1,0 @@
-def Locker():
-    print("Locker")

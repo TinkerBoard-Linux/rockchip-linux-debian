@@ -58,6 +58,20 @@ else
     sudo rm $TARGET_ROOTFS_DIR/usr/bin/tinker-config-tb3
 fi
 
+# ASUS.GPIO & WiringPI
+if [ "$RK_PROJECT_NAME" == "Tinker_Board_3" ]; then
+	sudo mv $TARGET_ROOTFS_DIR/usr/local/share/ASUS_GPIO_3 $TARGET_ROOTFS_DIR/usr/local/share/ASUS_GPIO
+	sudo rm -rf $TARGET_ROOTFS_DIR/usr/local/share/ASUS_GPIO_3N
+	sudo mv $TARGET_ROOTFS_DIR/usr/local/share/WiringPI_3 $TARGET_ROOTFS_DIR/usr/local/share/WiringPI
+	sudo rm -rf $TARGET_ROOTFS_DIR/usr/local/share/WiringPI_3N
+
+else
+	sudo mv $TARGET_ROOTFS_DIR/usr/local/share/ASUS_GPIO_3N $TARGET_ROOTFS_DIR/usr/local/share/ASUS_GPIO
+	sudo rm -rf $TARGET_ROOTFS_DIR/usr/local/share/ASUS_GPIO_3
+	sudo mv $TARGET_ROOTFS_DIR/usr/local/share/WiringPI_3N $TARGET_ROOTFS_DIR/usr/local/share/WiringPI
+	sudo rm -rf $TARGET_ROOTFS_DIR/usr/local/share/WiringPI_3
+fi
+
 # overlay-firmware folder
 sudo cp -rpf overlay-firmware/* $TARGET_ROOTFS_DIR/
 sudo mkdir -p $TARGET_ROOTFS_DIR/tmp_firmware
