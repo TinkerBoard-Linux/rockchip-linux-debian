@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=ASUS AICC
+Comment=ASUS AICC Portal
+Icon=/usr/share/pixmaps/aicc-icon.png
+Exec=xdg-open https://aicc.asus.com/
+Terminal=false
+Categories=Network;WebBrowser;
