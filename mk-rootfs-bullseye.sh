@@ -192,6 +192,12 @@ echo -e "\033[36m Install camera.................... \033[0m"
 \${APT_INSTALL} /packages/cheese/*.deb
 \${APT_INSTALL} /packages/rkaiq/camera_engine_rkaiq_rk3568_arm64.deb
 
+if [ "$RK_PROJECT_NAME" == "Tinker_Board_3_RV" ] && [ "$VERSION" == "factory" ]; then
+#------------------zbar tools------------
+echo -e "\033[36m Install zbar tools.................... \033[0m"
+\${APT_INSTALL} zbar-tools
+fi
+
 #---------Network----------
 apt-get install -y ethtool
 apt-get install -y iperf3
