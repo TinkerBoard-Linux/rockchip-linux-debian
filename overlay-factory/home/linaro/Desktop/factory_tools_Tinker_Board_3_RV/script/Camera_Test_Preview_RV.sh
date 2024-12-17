@@ -28,8 +28,8 @@ fi
 cat /sys/bus/i2c/drivers/imx219/1-0010/name |grep "imx219"
 if [ "$?" == "0" ]; then
 	echo -e "Start Capture!" | tee -a $ResultFile
-	gst-launch-1.0 v4l2src device=/dev/video0 device=$CSI0 num-buffers=100 ! video/x-raw,format=NV12,width=1280,height=960 ! videoconvert ! autovideosink
-	gst-launch-1.0 v4l2src device=/dev/video0 device=$CSI0 num-buffers=10 ! video/x-raw,format=NV12,width=1280,height=960 ! jpegenc ! multifilesink location=$PicPath
+	gst-launch-1.0 v4l2src device=/dev/video0 device=$CSI0 num-buffers=200 ! video/x-raw,format=NV12,width=1280,height=960 ! videoconvert ! autovideosink
+	gst-launch-1.0 v4l2src device=/dev/video0 device=$CSI0 num-buffers=30 ! video/x-raw,format=NV12,width=1280,height=960 ! jpegenc ! multifilesink location=$PicPath
 	echo -e "Read QR code" | tee -a $ResultFile
 	zbarimg $PicPath > $QRCodeResult
 	cat $QRCodeResult |grep "asuscamera"
