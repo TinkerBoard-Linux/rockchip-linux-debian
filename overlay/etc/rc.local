@@ -16,6 +16,8 @@ HDMI_HOTPLUG_CONFIG="/boot/display/hdmi/hdmi_plug_flag.cfg"
 DP_HOTPLUG_CONFIG="/boot/display/dp/dp_plug_flag.cfg"
 HDMI_XRANDR_CONFIG="/boot/display/hdmi/xrandr.cfg"
 DP_XRANDR_CONFIG="/boot/display/dp/xrandr.cfg"
+hdmi_status=$(cat /sys/class/drm/card0-HDMI-A-1/status)
+dp_status=$(cat /sys/class/drm/card0-DP-1/status)
 
 if [ ! -d /boot/display ]; then
     mkdir /boot/display
@@ -39,7 +41,15 @@ if [ -f $DP_HOTPLUG_CONFIG ]; then
 fi
 
 touch $HDMI_HOTPLUG_CONFIG
+if [ $hdmi_status = "disconnected" ]; then
+    echo Plug_Out > $HDMI_HOTPLUG_CONFIG
+fi
+
 touch $DP_HOTPLUG_CONFIG
+if [ $dp_status = "disconnected" ]; then
+    echo Plug_Out > $DP_HOTPLUG_CONFIG
+fi
+
 touch $HDMI_XRANDR_CONFIG
 touch $DP_XRANDR_CONFIG
 
