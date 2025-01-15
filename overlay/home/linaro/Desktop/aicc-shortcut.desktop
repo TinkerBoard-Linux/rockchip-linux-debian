@@ -4,6 +4,6 @@ Type=Application
 Name=ASUS AICC
 Comment=ASUS AICC Portal
 Icon=/usr/share/pixmaps/aicc-icon.png
-Exec=xdg-open https://aicc.asus.com/
+Exec=xdg-open https://iot.asus.com/solutions/asus-iot-cloud-console-aicc/
 Terminal=false
 Categories=Network;WebBrowser;
