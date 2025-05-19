@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Define GPIO pin arrays (corrected numbering based on your comments)
+gpio_a=(11 8 16 147 83 81 108 150 106 100 101 17 99 23)
+gpio_b=(12 85 146 149 82 84 107 22 105 76 102 75 117 20)
+
+# Initialize test result
+result="PASS"
+
+# Function to reset GPIO pin
+function gpio_reset() {
+  local gpio_pin="$1"
+  local path="/sys/class/gpio/"
+
+  if [ -d "$path" ]; then
+    echo "$gpio_pin" > "$path/unexport"
+  fi
+  echo "$gpio_pin" > "$path/export"
+}
+
+# Function to perform self-test on a pair of GPIO pins
+function gpio_selftest() {
+  local index="$1"
+  local output_pin="$2"
+  local input_pin="$3"
+
+  # Set pin directions and initial output value
+  echo "in" > "/sys/class/gpio/gpio${input_pin}/direction"
+  echo "out" > "/sys/class/gpio/gpio${output_pin}/direction"
+  echo "0" > "/sys/class/gpio/gpio${output_pin}/value"
+
+  # Read pin values for low and high output states
+  local FromStatusL=$(cat "/sys/class/gpio/gpio${output_pin}/value")
+  local ToStatusL=$(cat "/sys/class/gpio/gpio${input_pin}/value")
+
+  echo "out" > "/sys/class/gpio/gpio${output_pin}/direction"
+  echo "1" > "/sys/class/gpio/gpio${output_pin}/value"
+
+  local FromStatusH=$(cat "/sys/class/gpio/gpio${output_pin}/value")
+  local ToStatusH=$(cat "/sys/class/gpio/gpio${input_pin}/value")
+
+  # Print status information and check for successful test
+#  echo "IN=PIN#${input_pin}, OUT=PIN#${output_pin}"
+  #echo "FromStatusL=${FromStatusL} ToStatusL=${ToStatusL} FromStatusH=${FromStatusH} ToStatusH=${ToStatusH}"
+  if [[ $FromStatusL -eq 0 && $ToStatusL -eq 0 && $FromStatusH -eq 1 && $ToStatusH -eq 1 ]]; then
+#    echo "PASS"
+    result="PASS"
+  else
+    result="FAIL"
+  fi
+}
+
+# Loop through each pair of pins and perform self-test in both directions
+for ((i = 0; i < ${#gpio_a[@]}; i++)); do
+  gpio_reset "${gpio_a[$i]}"
+  gpio_reset "${gpio_b[$i]}"
+
+  gpio_selftest "$i" "${gpio_a[$i]}" "${gpio_b[$i]}"
+  if [ "$result" == "FAIL" ]; then
+    echo "FAIL, ${gpio_a[$i]} to ${gpio_b[$i]}"
+    break
+  fi
+
+  gpio_selftest "$i" "${gpio_b[$i]}" "${gpio_a[$i]}"
+  if [ "$result" == "FAIL" ]; then
+    echo "FAIL, ${gpio_b[$i]} to ${gpio_a[$i]}"
+    break
+  fi
+done
+
+# Print final test result
+
+if [ "$result" == "PASS" ]; then
+  echo "$result"
+fi
+

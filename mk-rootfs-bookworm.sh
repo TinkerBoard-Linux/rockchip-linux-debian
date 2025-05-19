@@ -3,6 +3,10 @@
 # Directory contains the target rootfs
 TARGET_ROOTFS_DIR="binary"
 
+if [ -e $TARGET_ROOTFS_DIR ]; then
+        sudo rm -rf $TARGET_ROOTFS_DIR
+fi
+
 case "${ARCH:-$1}" in
 	arm|arm32|armhf)
 		ARCH=armhf
@@ -15,18 +19,25 @@ esac
 echo -e "\033[36m Building for $ARCH \033[0m"
 
 if [ ! $VERSION ]; then
-	VERSION="release"
+	VERSION="debug"
 fi
 
+# Initialized to "eng", however this should be set in build.sh
+if [ ! $VERSION_NUMBER ]; then
+        VERSION_NUMBER="eng"
+fi
+
+echo "linaro-bookworm-$ARCH.tar.gz"
 echo -e "\033[36m Building for $VERSION \033[0m"
 
-if [ ! -e linaro-bookworm-alip-*.tar.gz ]; then
+if [ ! -e linaro-bookworm-$ARCH.tar.gz ]; then
 	echo "\033[36m Run mk-base-debian.sh first \033[0m"
 	exit -1
 fi
 
+
 echo -e "\033[36m Extract image \033[0m"
-sudo tar -xpf linaro-bookworm-alip-*.tar.gz
+sudo tar -xpf linaro-bookworm-$ARCH.tar.gz
 
 # packages folder
 sudo mkdir -p $TARGET_ROOTFS_DIR/packages
@@ -34,17 +45,67 @@ sudo cp -rpf packages/$ARCH/* $TARGET_ROOTFS_DIR/packages
 
 # overlay folder
 sudo cp -rpf overlay/* $TARGET_ROOTFS_DIR/
+if [ "$VERSION" == "sdflash" ]; then
+	sudo mv $TARGET_ROOTFS_DIR/etc/init.d/sdflash-rockchip.sh $TARGET_ROOTFS_DIR/etc/init.d/rockchip.sh
+else
+	sudo rm -f $TARGET_ROOTFS_DIR/etc/init.d/sdflash-rockchip.sh
+fi
+
+# tinker-config
+if [ "$RK_PROJECT_NAME" == "Tinker_Board_3" ]; then
+    sudo mv $TARGET_ROOTFS_DIR/usr/bin/tinker-config-tb3 $TARGET_ROOTFS_DIR/usr/bin/tinker-config
+    sudo rm $TARGET_ROOTFS_DIR/usr/bin/tinker-config-tb3n
+else
+    sudo mv $TARGET_ROOTFS_DIR/usr/bin/tinker-config-tb3n $TARGET_ROOTFS_DIR/usr/bin/tinker-config
+    sudo rm $TARGET_ROOTFS_DIR/usr/bin/tinker-config-tb3
+fi
 
 # overlay-firmware folder
 sudo cp -rpf overlay-firmware/* $TARGET_ROOTFS_DIR/
+sudo mkdir -p $TARGET_ROOTFS_DIR/tmp_firmware
+sudo cp -rf overlay-firmware/usr/lib/firmware/* $TARGET_ROOTFS_DIR/tmp_firmware
 
 # overlay-debug folder
 # adb, video, camera  test file
 if [ "$VERSION" == "debug" ]; then
 	sudo cp -rpf overlay-debug/* $TARGET_ROOTFS_DIR/
+        sudo rm -rf $TARGET_ROOTFS_DIR/home/linaro/Desktop/Test_tool*
+	mkdir -p $TARGET_ROOTFS_DIR/home/linaro/Desktop/Test_tool
+        sudo cp -arp overlay-debug/home/linaro/Desktop/Test_tool_$RK_PROJECT_NAME/* $TARGET_ROOTFS_DIR/home/linaro/Desktop/Test_tool/
 fi
 
+# overlay-debug and overlay-factory folder
+# adb, video, camera  test file
+if [ "$VERSION" == "factory" ]; then
+        sudo cp -rpf overlay-debug/* $TARGET_ROOTFS_DIR/
+        sudo rm -rf $TARGET_ROOTFS_DIR/home/linaro/Desktop/Test_tool*
+        mkdir -p $TARGET_ROOTFS_DIR/home/linaro/Desktop/Test_tool
+        sudo cp -arp overlay-debug/home/linaro/Desktop/Test_tool_$RK_PROJECT_NAME/* $TARGET_ROOTFS_DIR/home/linaro/Desktop/Test_tool/
+
+        sudo cp -rf overlay-factory/* $TARGET_ROOTFS_DIR/
+        sudo rm -rf $TARGET_ROOTFS_DIR/home/linaro/Desktop/factory_tools*
+        mkdir -p $TARGET_ROOTFS_DIR/home/linaro/Desktop/factory_tools
+        sudo cp -arp overlay-factory/home/linaro/Desktop/factory_tools_$RK_PROJECT_NAME/* $TARGET_ROOTFS_DIR/home/linaro/Desktop/factory_tools/
+fi
+
+
+# bt/wifi firmware
+sudo mkdir -p $TARGET_ROOTFS_DIR/system/lib/modules/
+sudo mkdir -p $TARGET_ROOTFS_DIR/vendor/etc
+
+sudo find ../kernel/drivers/net/wireless/rockchip_wlan/*  -name "*.ko" | \
+    xargs -n1 -i sudo cp {} $TARGET_ROOTFS_DIR/system/lib/modules/
+
 echo -e "\033[36m Change root.....................\033[0m"
+
+#sudo find ../kernel/drivers/net/wireless/rockchip_wlan/*  -name "*.ko" | \
+#    xargs -n1 -i sudo cp {} $TARGET_ROOTFS_DIR/system/lib/modules/
+
+# ASUS: Change to copy all the kernel modules built from build.sh.
+sudo cp -rf lib_modules/lib/modules $TARGET_ROOTFS_DIR/lib/
+
+
+sudo mount -o bind /dev $TARGET_ROOTFS_DIR/dev
 
 ID=$(stat --format %u $TARGET_ROOTFS_DIR)
 
@@ -73,10 +134,17 @@ export APT_INSTALL="apt-get install -fy --allow-downgrades"
 # enter root username without password
 sed -i "s~\(^ExecStart=.*\)~# \1\nExecStart=-/bin/sh -c '/bin/bash -l </dev/%I >/dev/%I 2>\&1'~" /usr/lib/systemd/system/serial-getty@.service
 
+#---------------tinker config-----------------
+\${APT_INSTALL} plymouth plymouth-themes
+plymouth-set-default-theme script
+
 #---------------power management --------------
 \${APT_INSTALL} pm-utils triggerhappy bsdmainutils
 cp /etc/Powermanager/triggerhappy.service  /lib/systemd/system/triggerhappy.service
 sed -i "s/#HandlePowerKey=.*/HandlePowerKey=ignore/" /etc/systemd/logind.conf
+
+#---------------Virtual keyboard--------------
+\${APT_INSTALL} onboard onboard-common
 
 #---------------Rga--------------
 \${APT_INSTALL} /packages/rga2/*.deb
@@ -97,6 +165,15 @@ echo -e "\033[36m Install camera.................... \033[0m"
 \${APT_INSTALL} cheese v4l-utils
 \${APT_INSTALL} /packages/libv4l/*.deb
 \${APT_INSTALL} /packages/cheese/*.deb
+if [ "$RK_PROJECT_NAME" == "Tinker_Board_3_RV" ] && [ "$VERSION" == "factory" ]; then
+#------------------zbar tools------------
+echo -e "\033[36m Install zbar tools.................... \033[0m"
+\${APT_INSTALL} zbar-tools
+fi
+
+#---------Network----------
+apt-get install -y ethtool
+apt-get install -y iperf3
 
 #---------Xserver---------
 echo -e "\033[36m Install Xserver.................... \033[0m"
@@ -137,16 +214,24 @@ rm -f /usr/sbin/policy-rc.d
 echo -e "\033[36m Install blueman.................... \033[0m"
 \${APT_INSTALL} /packages/blueman/*.deb
 
+# Change the background for ASUS Tinker Board
+rm -rf /usr/share/images/desktop-base/default
+ln -s /etc/ASUS/ASUS-2017-Tinkerboard-v1-wp-02-1920x1080.jpg /usr/share/images/desktop-base/default
+
 #------------------rkwifibt------------
 echo -e "\033[36m Install rkwifibt.................... \033[0m"
 \${APT_INSTALL} /packages/rkwifibt/*.deb
 ln -s /system/etc/firmware /vendor/etc/
 
-if [ "$VERSION" == "debug" ]; then
+if [ "$VERSION" == "debug" ] || [ "$VERSION" == "factory" ]; then
 #------------------glmark2------------
 echo -e "\033[36m Install glmark2.................... \033[0m"
 \${APT_INSTALL} /packages/glmark2/*.deb
 fi
+
+#------------------mtd-utils------------
+echo -e "\033[36m Install mtd-utils.................... \033[0m"
+\${APT_INSTALL} mtd-utils
 
 if [ -e "/usr/lib/aarch64-linux-gnu" ] ;
 then
@@ -159,13 +244,13 @@ fi
 echo -e "\033[36m Install rktoolkit.................... \033[0m"
 \${APT_INSTALL} /packages/rktoolkit/*.deb
 
-echo -e "\033[36m Install Chinese fonts.................... \033[0m"
+# echo -e "\033[36m Install Chinese fonts.................... \033[0m"
 # Uncomment zh_CN.UTF-8 for inclusion in generation
-sed -i 's/^# *\(zh_CN.UTF-8\)/\1/' /etc/locale.gen
-echo "LANG=zh_CN.UTF-8" >> /etc/default/locale
+# sed -i 's/^# *\(zh_CN.UTF-8\)/\1/' /etc/locale.gen
+# echo "LANG=zh_CN.UTF-8" >> /etc/default/locale
 
 # Generate locale
-locale-gen
+# locale-gen
 
 \${APT_INSTALL} ttf-wqy-zenhei fonts-aenigma
 \${APT_INSTALL} xfonts-intl-chinese
@@ -212,6 +297,58 @@ systemctl mask systemd-networkd-wait-online.service
 systemctl mask NetworkManager-wait-online.service
 rm /lib/systemd/system/wpa_supplicant@.service
 
+#-------ASUS customization start-------
+
+echo $VERSION_NUMBER > /etc/version
+
+chmod a+x /etc/init.d/mountboot.sh
+systemctl enable mountboot.service
+
+if [ "$VERSION" == "factory" ]; then
+	cp /etc/Ethernet/static-eth.service  /usr/lib/systemd/system/static-eth.service
+	systemctl enable static-eth.service
+fi
+
+#-------ASUS customization end-------
+# Install the gedit packages
+apt-get install -y gedit
+
+#-------Tinker board 3: python-dev for development tools------
+apt-get install -y python-dev
+
+# Install the bash-completion for apt-get tab auto search
+apt-get install bash-completion
+
+# Change default Terminal emulator to xfce4-terminal
+\${APT_INSTALL} xfce4-terminal
+sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/bin/xfce4-terminal 40
+update-alternatives --auto x-terminal-emulator
+
+#-------Tinker board 3N: rknn-toolkit_lite2-------
+if [ "$VERSION" == "debug" ] || [ "$VERSION" == "factory" ]; then
+        chown -R linaro:linaro /home/linaro/Desktop
+	# double click can to execuate the shell script file
+	sed -i -e 's/x-shellscript=vim.desktop/x-shellscript=xfce4-terminal-emulator.desktop/g' /usr/share/applications/mimeinfo.cache
+fi
+
+# Change systemd-suspend.service method to pm-suspend
+cp /etc/Powermanager/systemd-suspend.service  /lib/systemd/system/systemd-suspend.service
+
+#-------Tinker board 3: build-essential for development tools------
+apt-get install -y build-essential
+
+# -------Install for USB eject fail------
+apt-get install -y eject
+
+#---------------ncurses library--------------
+\${APT_INSTALL} libncurses5-dev libncursesw5-dev
+
+#------- factory library for opencv -------------------
+if [ "$VERSION" == "factory" ]; then
+        pip3 install opencv-python
+        pip3 install opencv-contrib-python
+fi
+
 #---------------Clean--------------
 if [ -e "/usr/lib/arm-linux-gnueabihf/dri" ] ;
 then
@@ -233,8 +370,18 @@ then
 fi
 cd -
 
+if [ "$VERSION" == "release" ]; then
+        sed -i "s|^autologin-user=.*|#autologin-user=linaro|" /etc/lightdm/lightdm.conf
+        sed -i "s|^autologin-user-timeout=.*|#autologin-user-timeout=0|" /etc/lightdm/lightdm.conf
+        passwd --expire linaro
+	\${APT_INSTALL} light-locker
+fi
+
+#---------------Fix suspend resume can't enter login screen--------------
 rm -rf /var/lib/apt/lists/*
 rm -rf /var/cache/
 rm -rf /packages/
 
 EOF
+
+sudo umount $TARGET_ROOTFS_DIR/dev
