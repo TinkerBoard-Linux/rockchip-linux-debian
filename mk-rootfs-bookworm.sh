@@ -173,7 +173,7 @@ fi
 
 #---------Network----------
 apt-get install -y ethtool
-apt-get install -y iperf3
+DEBIAN_FRONTEND=noninteractive apt-get install -y iperf3
 
 #---------Xserver---------
 echo -e "\033[36m Install Xserver.................... \033[0m"
@@ -311,7 +311,7 @@ fi
 
 #-------ASUS customization end-------
 # Install the gedit packages
-apt-get install -y gedit
+apt-get install -y gedit xxd
 
 #-------Tinker board 3: python-dev for development tools------
 apt-get install -y python-dev
