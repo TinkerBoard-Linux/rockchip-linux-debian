@@ -350,6 +350,9 @@ if [ "$VERSION" == "factory" ]; then
         pip3 install opencv-contrib-python
 fi
 
+#---------------audio wireplumber policy--------------
+sed -i 's/\(\["use-original-prio"\][[:space:]]*=[[:space:]]*\).*$/\1false,/' /usr/share/wireplumber/main.lua.d/40-device-defaults.lua
+
 #---------------Clean--------------
 if [ -e "/usr/lib/arm-linux-gnueabihf/dri" ] ;
 then
