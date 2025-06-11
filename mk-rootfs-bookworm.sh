@@ -357,6 +357,7 @@ sed -i 's/\(\["use-original-prio"\][[:space:]]*=[[:space:]]*\).*$/\1false,/' /us
 chmod 755 /etc/wireplumber/switch_sound_device.sh
 chmod 755 /etc/wireplumber/jack_hotplug.sh
 chmod 755 /usr/local/bin/switch_sound_device_boot.sh
+ln -s /usr/lib/systemd/system/switch-sound-device-boot.service /etc/systemd/system/multi-user.target.wants/switch-sound-device-boot.service
 
 #---------------Clean--------------
 if [ -e "/usr/lib/arm-linux-gnueabihf/dri" ] ;
