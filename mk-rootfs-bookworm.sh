@@ -353,6 +353,10 @@ fi
 #---------------audio wireplumber policy--------------
 sed -i 's/\(\["use-original-prio"\][[:space:]]*=[[:space:]]*\).*$/\1false,/' /usr/share/wireplumber/main.lua.d/40-device-defaults.lua
 
+----------------audio--------------
+chmod 755 /etc/wireplumber/switch_sound_device.sh
+chmod 755 /etc/wireplumber/jack_hotplug.sh
+
 #---------------Clean--------------
 if [ -e "/usr/lib/arm-linux-gnueabihf/dri" ] ;
 then
