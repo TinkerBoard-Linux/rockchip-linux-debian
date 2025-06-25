@@ -342,7 +342,13 @@ apt-get install -y build-essential
 apt-get install -y eject
 
 #---------------ncurses library--------------
-\${APT_INSTALL} libncurses5-dev libncursesw5-dev
+apt-get update
+apt-get install -y libncurses-dev
+# For tinker-power-management build
+cd /usr/local/share/tinker-power-management
+gcc tinker-power-management.c -o tinker-power-management -lncursesw
+mv tinker-power-management /usr/bin
+cd -
 
 #------- factory library for opencv -------------------
 if [ "$VERSION" == "factory" ]; then
