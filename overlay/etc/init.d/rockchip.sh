@@ -118,6 +118,20 @@ esac
 compatible="${compatible#rockchip,}"
 boardname="${compatible%%rockchip,*}"
 
+# set act-led trigger function
+if [ -e "/sys/class/leds/act-led/trigger" ]; then
+    cmdline=$(cat /proc/cmdline)
+    storage=`echo $cmdline|awk '{print match($0,"storagemedia=emmc")}'`;
+
+    if [ $storage -gt 0 ]; then
+        #emmc
+        echo mmc0 > /sys/class/leds/act-led/trigger
+    else
+        #sdcard
+        echo mmc1 > /sys/class/leds/act-led/trigger
+    fi
+fi
+
 # first boot configure
 if [ ! -e "/usr/local/first_boot_flag" ]; then
     echo "It's the first time booting. The rootfs will be configured."
