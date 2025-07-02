@@ -228,6 +228,10 @@ echo -e "\033[36m Install modemmanager................ \033[0m"
 \${APT_INSTALL} /packages/modemmanager/*.deb
 sed -i 's/\/usr\/sbin\/ModemManager/\/usr\/sbin\/ModemManager --debug/' /lib/systemd/system/ModemManager.service
 
+#------------------connectivity service-------------
+echo -e "\033[36m Enable CM................ \033[0m"
+systemctl enable mm_keepalive.service
+
 if [ "$VERSION" == "debug" ] || [ "$VERSION" == "factory" ]; then
 #------------------glmark2------------
 echo -e "\033[36m Install glmark2.................... \033[0m"
