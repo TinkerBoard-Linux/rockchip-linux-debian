@@ -223,6 +223,10 @@ echo -e "\033[36m Install rkwifibt.................... \033[0m"
 \${APT_INSTALL} /packages/rkwifibt/*.deb
 ln -s /system/etc/firmware /vendor/etc/
 
+#------------------modemmanager--------
+echo -e "\033[36m Install modemmanager................ \033[0m"
+\${APT_INSTALL} /packages/modemmanager/*.deb
+
 if [ "$VERSION" == "debug" ] || [ "$VERSION" == "factory" ]; then
 #------------------glmark2------------
 echo -e "\033[36m Install glmark2.................... \033[0m"
