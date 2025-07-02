@@ -226,6 +226,7 @@ ln -s /system/etc/firmware /vendor/etc/
 #------------------modemmanager--------
 echo -e "\033[36m Install modemmanager................ \033[0m"
 \${APT_INSTALL} /packages/modemmanager/*.deb
+sed -i 's/\/usr\/sbin\/ModemManager/\/usr\/sbin\/ModemManager --debug/' /lib/systemd/system/ModemManager.service
 
 if [ "$VERSION" == "debug" ] || [ "$VERSION" == "factory" ]; then
 #------------------glmark2------------
