@@ -151,6 +151,7 @@ if [ ! -e "/usr/local/first_boot_flag" ]; then
 
     touch /usr/local/first_boot_flag
 
+    sed -i 's/<property name="Notify" type="int" value="1"\/>/<property name="Notify" type="int" value="0"\/>/' /home/linaro/.config/xfce4/xfconf/xfce-perchannel-xml/displays.xml
     # In order to achieve better compatibility, various applications will being
     # installed during the first system startup. This can result in slow boot times,
     # slow read/write speeds, and issues such as PipeWire audio being silent.
