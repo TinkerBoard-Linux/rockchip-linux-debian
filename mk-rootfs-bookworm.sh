@@ -138,11 +138,6 @@ sed -i "s~\(^ExecStart=.*\)~# \1\nExecStart=-/bin/sh -c '/bin/bash -l </dev/%I >
 \${APT_INSTALL} plymouth plymouth-themes
 plymouth-set-default-theme script
 
-#---------------power management --------------
-\${APT_INSTALL} pm-utils triggerhappy bsdmainutils
-cp /etc/Powermanager/triggerhappy.service  /lib/systemd/system/triggerhappy.service
-sed -i "s/#HandlePowerKey=.*/HandlePowerKey=ignore/" /etc/systemd/logind.conf
-
 #---------------Virtual keyboard--------------
 \${APT_INSTALL} onboard onboard-common
 
@@ -340,9 +335,6 @@ if [ "$VERSION" == "debug" ] || [ "$VERSION" == "factory" ]; then
 	# double click can to execuate the shell script file
 	sed -i -e 's/x-shellscript=vim.desktop/x-shellscript=xfce4-terminal-emulator.desktop/g' /usr/share/applications/mimeinfo.cache
 fi
-
-# Change systemd-suspend.service method to pm-suspend
-cp /etc/Powermanager/systemd-suspend.service  /lib/systemd/system/systemd-suspend.service
 
 #-------Tinker board 3: build-essential for development tools------
 apt-get install -y build-essential
