@@ -123,8 +123,6 @@ echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 echo "nameserver 127.0.0.53" >> /etc/resolv.conf
 echo "nameserver 114.114.114.114" >> /etc/resolv.conf
 
-echo "deb http://mirrors.ustc.edu.cn/debian/ bookworm-backports main contrib" >> /etc/apt/sources.list
-echo "deb-src http://mirrors.ustc.edu.cn/debian/ bookworm-backports main contrib" >> /etc/apt/sources.list
 
 apt-get update
 apt-get upgrade -y
@@ -354,6 +352,10 @@ cd /usr/local/share/tinker-power-management
 gcc tinker-power-management.c -o tinker-power-management -lncursesw
 mv tinker-power-management /usr/bin
 cd -
+
+#------- Logrotate and Nginx are installed to prevent excessive log file growth  -------------------
+apt-get update
+apt-get install -y logrotate nginx
 
 #------- factory library for opencv -------------------
 if [ "$VERSION" == "factory" ]; then
