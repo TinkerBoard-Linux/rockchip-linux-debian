@@ -355,7 +355,7 @@ cd -
 
 #------- Logrotate and Nginx are installed to prevent excessive log file growth  -------------------
 apt-get update
-apt-get install -y logrotate nginx
+apt-get install -y logrotate 
 
 #------- factory library for opencv -------------------
 if [ "$VERSION" == "factory" ]; then
