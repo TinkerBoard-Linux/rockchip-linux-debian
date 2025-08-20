@@ -136,17 +136,24 @@ export XDG_RUNTIME_DIR=/run/user/1000
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
 if [ $hdmi_status = "connected" ];
 then
-        if [ $jack_tb3n_status = 1 ] || [ $jack_tb3_status = 1 ];
-        then
-                echo "Plug-in HDMI, but audio jack is connected, set default sound card to RK809"  > /dev/kmsg
-                /etc/wireplumber/switch_sound_device.sh "alsa_output.platform-rk809-sound.HiFi__hw_rockchiprk809__sink"
-        else
-                echo "Plug-in HDMI, set default sound card to HDMI"  > /dev/kmsg
-                /etc/wireplumber/switch_sound_device.sh "alsa_output.platform-hdmi-sound.stereo-fallback"
-        fi
+	if [ $jack_tb3n_status = 1 ] || [ $jack_tb3_status = 1 ];
+	then
+		echo "Plug-in HDMI, but audio jack is connected, set default sound card to RK809"  > /dev/kmsg
+		/etc/wireplumber/switch_sound_device.sh "alsa_output.platform-rk809-sound.HiFi__hw_rockchiprk809__sink"
+	else
+		echo "Plug-in HDMI, set default sound card to HDMI"  > /dev/kmsg
+		/etc/wireplumber/switch_sound_device.sh "alsa_output.platform-hdmi-sound.stereo-fallback"
+	fi
 else
-        echo "Plug-out HDMI, set default sound card to RK809"  > /dev/kmsg
-        /etc/wireplumber/switch_sound_device.sh "alsa_output.platform-rk809-sound.HiFi__hw_rockchiprk809__sink"
+	hdmi_enabled=$(cat /sys/class/drm/card0-HDMI-A-1/enabled)
+	if [ $hdmi_enabled = "enabled" ];
+	then
+		echo "Plug-in HDMI, but HDMI status is '$hdmi_status', check hdmi enabled value is '$hdmi_enabled', set default sound card to HDMI"  > /dev/kmsg
+		/etc/wireplumber/switch_sound_device.sh "alsa_output.platform-hdmi-sound.stereo-fallback"
+	else
+		echo "Plug-out HDMI, check hdmi enabled value is '$hdmi_enabled', set default sound card to RK809"  > /dev/kmsg
+		/etc/wireplumber/switch_sound_device.sh "alsa_output.platform-rk809-sound.HiFi__hw_rockchiprk809__sink"
+	fi
 fi
 
 exit 0
